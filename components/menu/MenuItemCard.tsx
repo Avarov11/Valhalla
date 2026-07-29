@@ -32,6 +32,13 @@ type MenuItemCardProps = {
  *
  * Card stays tappable when unavailable, so someone can still see what it
  * is; the actual disabled control is the add button on the detail page.
+ *
+ * Available cards get --shadow-card, a rose-tinted glow (rgba built from
+ * the accent ramp, not the neutral shadow used everywhere else) instead
+ * of a plain drop shadow, so the grid reads as warm and lit rather than
+ * generic elevation. Unavailable cards keep the plain --shadow-md, so
+ * the glow itself becomes a small signal of "in stock", not just
+ * decoration sitting under every card regardless of state.
  */
 export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardProps) {
   const hasSizes = item.item_sizes.length > 0;
@@ -47,7 +54,7 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
       whileTap={{ scale: 0.97 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="overflow-hidden rounded-(--radius-lg) bg-(--bg-surface) shadow-(--shadow-md)"
+      className={`overflow-hidden rounded-(--radius-lg) bg-(--bg-surface) ${isAvailable ? "shadow-(--shadow-card)" : "shadow-(--shadow-md)"}`}
     >
       <Link
         href={`/item/${item.id}`}
