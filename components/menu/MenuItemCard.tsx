@@ -72,6 +72,19 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
           best single ratio for a corpus with this much aspect variance
           across categories, without breaking "one consistent frame
           across all 134".
+
+          object-top on the image itself (below) is the follow-up fix:
+          switching to square traded Sweet Classic/Sweet Cones' horizontal
+          crop problem for a new vertical one on categories whose photos
+          are natively closer to portrait (Milkshakes, Mojitos, aspect
+          ~0.91), and their photos have a product name baked into the top
+          of the frame in a script font ("Milkshake Chocolate" etc). A
+          center-anchored crop was cutting straight through that text.
+          Anchoring to the top instead means any vertical crop a category
+          needs comes entirely from the bottom, which is empty backdrop
+          or the lower part of the jar/glass on every category checked
+          (Milkshakes, Mojitos, Smoothies, Sweet Classic, Sweet Cones,
+          Savory, Pizza), never a second thing worth protecting.
         */}
         <div className="relative aspect-square w-full bg-(--bg-unavailable)">
           {item.image_url ? (
@@ -80,7 +93,7 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
               alt={item.name_en}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className={`object-cover ${isAvailable ? "" : "opacity-60"}`}
+              className={`object-cover object-top ${isAvailable ? "" : "opacity-60"}`}
             />
           ) : null}
 
