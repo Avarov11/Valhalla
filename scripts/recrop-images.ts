@@ -5,8 +5,39 @@ import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
 
 const BUCKET = "menu-images";
-const TARGET = 1200;
+const LONG_SIDE = 1200;
 const WEBP_QUALITY = 85;
+
+// Kept in sync with lib/menu/category-aspect.ts by hand (this script runs
+// standalone via tsx, outside the Next.js path-alias resolution the app
+// itself uses, so it isn't imported directly). Width / height, measured
+// from the real source photos, not one universal square: see that file's
+// comment for the full reasoning and the per-category sample sizes.
+const CATEGORY_ASPECT: Record<string, number> = {
+  "sweet-cones": 1,
+  "sweet-classic": 1.25,
+  savory: 1,
+  extras: 1,
+  pizza: 1,
+  milkshakes: 0.91,
+  mojitos: 0.91,
+  smoothies: 0.67,
+  yogurt: 0.67,
+  juice: 0.67,
+  "hot-drinks": 1,
+  "hot-coffee": 1,
+  "cold-coffee": 1,
+  bakery: 0.67,
+  cakes: 0.8,
+};
+const DEFAULT_ASPECT = 1;
+
+function targetDimensions(aspect: number): { width: number; height: number } {
+  if (aspect >= 1) {
+    return { width: LONG_SIDE, height: Math.round(LONG_SIDE / aspect) };
+  }
+  return { width: Math.round(LONG_SIDE * aspect), height: LONG_SIDE };
+}
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -17,22 +48,30 @@ function requireEnv(name: string): string {
 }
 
 /**
- * Re-crops every menu item photo already in storage to a genuine
- * 1200x1200 square, in place (same storage path, same public URL, no
+ * Re-crops every menu item photo already in storage to its category's
+ * own aspect ratio, in place (same storage path, same public URL, no
  * menu_items.image_url update needed).
  *
- * Exists because CSS-only fixes on the display side (a square frame via
- * aspect-square, object-top, object-contain) each traded one category's
- * crop problem for another: the corpus has too much real composition
- * variance (1:1 cone shots, 1.25:1 chimney rolls, ~0.91:1 drink jars
- * with a product name baked into the top of the frame in script) for
- * any single fixed rule to protect every category watching over it.
+ * Started as a single universal 1200x1200 square for every item. Real
+ * measurement of the source photos showed that was fighting the
+ * photography rather than matching it: sweet-classic's chimney rolls
+ * are 1.25 wide-to-tall on every one of its 9 items, milkshakes' jars
+ * are 0.91 on every one of its 7, pizza is 1.00 on all 11. Forcing all
+ * of that into one square meant cropping into rolls on the sides, or
+ * needing extra logic just to protect a product name baked into the
+ * top of a drink photo. Per-category targets, still content-aware
+ * within that shape (see below), fit the dominant photo shape in each
+ * category directly instead.
  *
  * sharp's attention strategy is content-aware (libvips saliency
- * detection), not a fixed anchor point, so it crops each photo based on
- * what's actually salient in that specific image rather than one rule
- * applied uniformly to a corpus that was never uniform to begin with.
- * Run it again if new items get added with non-square source photos.
+ * detection), not a fixed anchor point, so within whatever shape a
+ * category targets, individual items whose own photo doesn't match
+ * that category's typical aspect (extras, smoothies, hot-coffee, and a
+ * few others have real internal variance, see category-aspect.ts) still
+ * get cropped around what's actually salient in that specific image.
+ *
+ * Run again if new items get added, or if CATEGORY_ASPECT changes (keep
+ * it in sync with lib/menu/category-aspect.ts by hand).
  */
 async function main() {
   const url = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
@@ -48,28 +87,37 @@ async function main() {
     throw new Error(`Failed to list menu items: ${error.message}`);
   }
 
-  // Several items share one source photo (nine, per CLAUDE.md), no need
-  // to download and re-crop the same image more than once.
-  const byUrl = new Map<string, typeof items>();
+  // Group by (image_url, target aspect) rather than image_url alone:
+  // the same source photo is never shared across two different
+  // categories in this catalogue, but grouping this way is correct even
+  // if that ever changed, since two categories could want different
+  // crops of the same source image.
+  type Row = (typeof items)[number];
+  const groups = new Map<string, { imageUrl: string; aspect: number; refs: Row[] }>();
+
   for (const item of items) {
-    const list = byUrl.get(item.image_url!) ?? [];
-    list.push(item);
-    byUrl.set(item.image_url!, list);
+    const slug = (item.categories as unknown as { slug: string } | null)?.slug ?? "";
+    const aspect = CATEGORY_ASPECT[slug] ?? DEFAULT_ASPECT;
+    const key = `${item.image_url}::${aspect}`;
+    const group = groups.get(key) ?? { imageUrl: item.image_url!, aspect, refs: [] as Row[] };
+    group.refs.push(item);
+    groups.set(key, group);
   }
 
-  console.log(`${items.length} items, ${byUrl.size} unique source images.`);
+  console.log(`${items.length} items, ${groups.size} unique (image, aspect) groups.`);
 
   let uploaded = 0;
   const failures: { name: string; error: string }[] = [];
 
-  for (const [imageUrl, refs] of byUrl) {
+  for (const { imageUrl, aspect, refs } of groups.values()) {
     try {
       const res = await fetch(imageUrl);
       if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status}`);
       const original = Buffer.from(await res.arrayBuffer());
 
+      const { width, height } = targetDimensions(aspect);
       const cropped = await sharp(original)
-        .resize(TARGET, TARGET, { fit: "cover", position: sharp.strategy.attention })
+        .resize(width, height, { fit: "cover", position: sharp.strategy.attention })
         .webp({ quality: WEBP_QUALITY })
         .toBuffer();
 
@@ -88,7 +136,8 @@ async function main() {
       }
     } catch (err) {
       for (const ref of refs) {
-        failures.push({ name: `${ref.categories?.[0]?.slug}/${ref.name_en}`, error: (err as Error).message });
+        const slug = (ref.categories as unknown as { slug: string } | null)?.slug ?? "?";
+        failures.push({ name: `${slug}/${ref.name_en}`, error: (err as Error).message });
       }
     }
   }
