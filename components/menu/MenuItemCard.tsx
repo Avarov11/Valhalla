@@ -62,18 +62,19 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
         className="flex flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-(--accent-ring) focus-visible:outline-offset-[-2px]"
       >
         {/*
-          object-contain, not object-cover: the corpus has too much real
-          aspect-ratio variance (1:1 cones, 1.25:1 rolls, 0.91:1 jars
-          with a product name baked into the top edge in script) for any
-          single crop strategy to protect on every category. Tried
-          object-cover with the frame at both 4:5 and square, then
-          object-top on square specifically, each fixed one category and
-          broke another (rolls cropped on the sides, then jar text
-          cropped through, then thin landscape photos read as mostly
-          dead backdrop once cropped to fit a square). Showing the whole
-          photo, letterboxed on --bg-unavailable rather than any part of
-          it ever being cut, is the one approach that holds for all 134
-          regardless of their native aspect.
+          Plain object-cover, no position override needed: every source
+          image in storage is now genuinely 1200x1200 (see
+          scripts/recrop-images.ts), not just displayed at a square
+          aspect ratio via CSS. CSS-only fixes (square frame, object-top,
+          object-contain) each traded one category's problem for another
+          because the underlying photos were never actually square, only
+          forced to look it. Re-cropped all 134 at the source instead,
+          using sharp's attention strategy (content-aware saliency
+          detection, not a fixed anchor point) so a baked-in product name
+          at the top of a drink photo and a wide chimney roll both get a
+          crop that keeps their own important content, per photo, rather
+          than one rule applied uniformly to a corpus that was never
+          uniform to begin with.
         */}
         <div className="relative aspect-square w-full bg-(--bg-unavailable)">
           {item.image_url ? (
@@ -82,7 +83,7 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
               alt={item.name_en}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className={`object-contain ${isAvailable ? "" : "opacity-60"}`}
+              className={`object-cover ${isAvailable ? "" : "opacity-60"}`}
             />
           ) : null}
 

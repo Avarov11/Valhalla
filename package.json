@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "seed:images": "tsx scripts/upload-images.ts"
+    "seed:images": "tsx scripts/upload-images.ts",
+    "recrop:images": "tsx scripts/recrop-images.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.7",
