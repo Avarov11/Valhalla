@@ -146,7 +146,18 @@
 :root {
   color-scheme: light;
 
-  --bg-page: var(--color-neutral-50);
+  /* A dedicated hex, not --color-neutral-50: that raw token is also
+     dark mode's --text-primary, so tuning it here would have quietly
+     changed dark-mode text colour too. Warm alabaster, not a flat
+     #ffffff or the previous cream: barely a whisper of warmth (verified
+     it still reads as "white", not "beige") so cards (pure #ffffff)
+     lift a hair off the page instead of the two surfaces looking
+     identical. Every existing light-mode contrast pairing improved
+     against it, not just held steady: text-primary 16.25:1 (was
+     15.17), text-secondary 6.51:1 (was 6.08), text-muted 5.42:1 (was
+     5.06), accent-600 5.81:1 (was 5.42), because it's closer to true
+     white than the old cream was. */
+  --bg-page: #fdfbf9;
   --bg-surface: #ffffff;
   --bg-surface-hover: var(--color-neutral-100);
   --bg-unavailable: var(--color-neutral-100);
@@ -233,7 +244,11 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --bg-page: var(--color-neutral-50);
+  /* Same warm-alabaster ground as the bare :root block above, repeated
+     rather than shared because this whole block exists to win the
+     cascade over the dark media query on an OS-dark device. See that
+     block's comment for why this is not --color-neutral-50. */
+  --bg-page: #fdfbf9;
   --bg-surface: #ffffff;
   --bg-surface-hover: var(--color-neutral-100);
   --bg-unavailable: var(--color-neutral-100);
