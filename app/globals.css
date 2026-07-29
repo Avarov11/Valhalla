@@ -159,9 +159,14 @@
   --border-default: var(--color-neutral-200);
   --border-strong: var(--color-neutral-300);
 
-  --accent-solid: var(--color-accent-700);
-  --accent-solid-hover: var(--color-accent-800);
-  --accent-text: var(--color-accent-700);
+  /* accent-600, not 700: 6.04:1 vs white button text, 5.42:1 as plain
+     text on this light bg. Matches the more vivid shade dark mode's
+     button already uses (previously light mode alone sat one shade
+     darker/more muted, on 700). Hover darkens one step to 700, same
+     directional pattern as before. */
+  --accent-solid: var(--color-accent-600);
+  --accent-solid-hover: var(--color-accent-700);
+  --accent-text: var(--color-accent-600);
   --accent-subtle-bg: var(--color-accent-50);
   --accent-ring: var(--color-accent-600);
 
@@ -241,9 +246,9 @@
   --border-default: var(--color-neutral-200);
   --border-strong: var(--color-neutral-300);
 
-  --accent-solid: var(--color-accent-700);
-  --accent-solid-hover: var(--color-accent-800);
-  --accent-text: var(--color-accent-700);
+  --accent-solid: var(--color-accent-600);
+  --accent-solid-hover: var(--color-accent-700);
+  --accent-text: var(--color-accent-600);
   --accent-subtle-bg: var(--color-accent-50);
   --accent-ring: var(--color-accent-600);
 

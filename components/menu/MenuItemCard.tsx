@@ -102,7 +102,7 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
           </h3>
           <span
             className={`font-(family-name:--font-display) text-(length:--text-xl) leading-(--leading-tight) tracking-(--tracking-tight) ${
-              isAvailable ? "text-(--color-accent-700)" : "text-(--color-neutral-400)"
+              isAvailable ? "text-(--color-accent-600)" : "text-(--color-neutral-400)"
             }`}
           >
             {hasSizes ? `From ${formatPrice(displayPrice)}` : formatPrice(displayPrice)}
