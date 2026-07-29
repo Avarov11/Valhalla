@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/*
+  Valhalla design tokens.
+  See design/PLAN.md for the reasoning behind each choice.
+
+  Redesign mode (2026-07-28): overhaul, visual language only. Palette below
+  is "Fire-Lit Hall", the direction picked after the three-way comparison.
+  The old rose ramp (anchored on #BE185D) is gone from this file entirely,
+  it was never in the actual logo mark (sampled pixel by pixel: the mark is
+  black ink, the pink was one export's background fill), so nothing about
+  preserving it was load-bearing.
+
+  Radius rule (documented once, followed everywhere):
+    - Buttons, badges, chips, rail pills, tags -> --radius-pill (interactive = pill, always)
+    - Cards, item photos, cart sheet, modals   -> --radius-lg
+    - Inputs, search bar                        -> --radius-md
+    - Small elements (checkboxes, tiny tags)    -> --radius-sm
+
+  Color rule: one accent (ember). Every step below is the SAME hue at a
+  different lightness, never a second color. Unavailable / error / empty
+  states use neutral charcoal tones + icon + copy, not a second accent.
+*/
+
+@theme {
+  /* ---- Accent ramp (Ember, anchored on #cc3d17) ---- */
+  --color-accent-50: #fdf1ec;
+  --color-accent-100: #fbe0d3;
+  --color-accent-200: #f6c1a8;
+  --color-accent-300: #f09b74;
+  --color-accent-400: #e76f45;
+  --color-accent-500: #dc4f24;
+  --color-accent-600: #cc3d17; /* brand anchor: dark-mode solid fill */
+  --color-accent-700: #a83112; /* light-mode solid fill, dark-mode hover */
+  --color-accent-800: #852812; /* light-mode hover */
+  --color-accent-900: #6b2211;
+  --color-accent-950: #3a1008;
+
+  /* ---- Neutral ramp (Charcoal/brass: warm, not cool Zinc/Slate) ---- */
+  --color-neutral-50: #f7f2ec;
+  --color-neutral-100: #ede4d8;
+  --color-neutral-200: #ddccb8;
+  --color-neutral-300: #c7b096;
+  --color-neutral-400: #a68a6d;
+  --color-neutral-500: #8a7058;
+  --color-neutral-600: #6b5843;
+  --color-neutral-700: #4d3f30;
+  --color-neutral-800: #332821;
+  --color-neutral-900: #241b16;
+  --color-neutral-950: #16110c; /* off-black, warm undertone. never pure #000. */
+
+  /* ---- Type families ----
+     Values point at the CSS variables next/font/google generates on
+     <html> in app/layout.tsx (--font-outfit etc), not literal font-family
+     name strings, so the self-hosted, optimized font actually loads. */
+  --font-display: var(--font-outfit), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-plus-jakarta-sans), "Segoe UI", system-ui, sans-serif;
+  --font-arabic: var(--font-cairo), "Segoe UI", system-ui, sans-serif;
+
+  /* ---- Type scale (mobile-first, rem) ---- */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.25rem;
+  --text-display-sm: clamp(2rem, 1.5rem + 2vw, 2.75rem);
+  --text-display-lg: clamp(2.25rem, 1.4rem + 3.2vw, 3.75rem);
+
+  --leading-tight: 1.1;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.02em;
+
+  /* ---- Radius ---- */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+
+  /* ---- Spacing (4px base) ---- */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+
+  /* ---- Motion (MOTION_INTENSITY: 5, fluid-CSS band) ---- */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- Layout constants ---- */
+  --header-height: 4.5rem;
+  --rail-height: 3.5rem;
+  --page-max-width: 80rem;
+
+  /* ---- Z-index scale (documented, no arbitrary z-50 spam) ---- */
+  --z-header: 40;
+  --z-rail: 30;
+  --z-cart-sheet: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+}
+
+/*
+  Semantic tokens: plain CSS custom properties, not @theme.
+  Components consume these for anything that flips between light and dark.
+*/
+:root {
+  color-scheme: light;
+
+  --bg-page: var(--color-neutral-50);
+  --bg-surface: #ffffff;
+  --bg-surface-hover: var(--color-neutral-100);
+  --bg-unavailable: var(--color-neutral-100);
+
+  --text-primary: var(--color-neutral-900);
+  --text-secondary: var(--color-neutral-600);
+  --text-muted: #7a6350; /* verified 5.06:1 vs bg-page, neutral-500 alone was 4.16 */
+  --text-on-accent: #ffffff;
+
+  --border-default: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-300);
+
+  --accent-solid: var(--color-accent-700);
+  --accent-solid-hover: var(--color-accent-800);
+  --accent-text: var(--color-accent-700);
+  --accent-subtle-bg: var(--color-accent-50);
+  --accent-ring: var(--color-accent-600);
+
+  /* Warm-tinted shadows, not black: rgba tinted toward the dark end of the
+     neutral ramp (neutral-900 territory) rather than neutral black. */
+  --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
+  --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
+  --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg-page: var(--color-neutral-950);
+    --bg-surface: var(--color-neutral-900);
+    --bg-surface-hover: var(--color-neutral-800);
+    --bg-unavailable: var(--color-neutral-900);
+
+    --text-primary: var(--color-neutral-50);
+    --text-secondary: var(--color-neutral-300);
+    --text-muted: var(--color-neutral-400);
+    --text-on-accent: #ffffff;
+
+    --border-default: var(--color-neutral-800);
+    --border-strong: var(--color-neutral-700);
+
+    /* 600/700 verified 4.94:1 / 6.75:1 for white button text (4.5:1 min),
+       darkens on hover same as light mode. accent-400 verified 6.04:1 as
+       plain text against neutral-950 (accent-text/ring aren't button
+       fills, they sit directly on the page background). */
+    --accent-solid: var(--color-accent-600);
+    --accent-solid-hover: var(--color-accent-700);
+    --accent-text: var(--color-accent-400);
+    --accent-subtle-bg: color-mix(in srgb, var(--color-accent-500) 16%, transparent);
+    --accent-ring: var(--color-accent-400);
+
+    /* Warm-tinted (ember-adjacent), not neutral black, for "fire-lit" depth. */
+    --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
+    --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
+    --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
+  }
+}
+
+/* Manual toggle overrides, win over prefers-color-scheme in either direction.
+   Each repeats the full light or dark token set rather than relying on
+   :root defaults, because on an OS-dark device a bare "[data-theme=light]"
+   selector tied at (0,1,0) specificity with the media query above would
+   lose to it by source order alone, silently keeping dark tokens active
+   while the toggle claims light is selected. */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-page: var(--color-neutral-50);
+  --bg-surface: #ffffff;
+  --bg-surface-hover: var(--color-neutral-100);
+  --bg-unavailable: var(--color-neutral-100);
+
+  --text-primary: var(--color-neutral-900);
+  --text-secondary: var(--color-neutral-600);
+  --text-muted: #7a6350;
+  --text-on-accent: #ffffff;
+
+  --border-default: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-300);
+
+  --accent-solid: var(--color-accent-700);
+  --accent-solid-hover: var(--color-accent-800);
+  --accent-text: var(--color-accent-700);
+  --accent-subtle-bg: var(--color-accent-50);
+  --accent-ring: var(--color-accent-600);
+
+  --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
+  --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
+  --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-page: var(--color-neutral-950);
+  --bg-surface: var(--color-neutral-900);
+  --bg-surface-hover: var(--color-neutral-800);
+  --bg-unavailable: var(--color-neutral-900);
+
+  --text-primary: var(--color-neutral-50);
+  --text-secondary: var(--color-neutral-300);
+  --text-muted: var(--color-neutral-400);
+  --text-on-accent: #ffffff;
+
+  --border-default: var(--color-neutral-800);
+  --border-strong: var(--color-neutral-700);
+
+  /* 600/700 verified 4.94:1 / 6.75:1 for white button text (4.5:1 min),
+     darkens on hover same as light mode. accent-400 verified 6.04:1 as
+     plain text against neutral-950 (accent-text/ring aren't button
+     fills, they sit directly on the page background). */
+  --accent-solid: var(--color-accent-600);
+  --accent-solid-hover: var(--color-accent-700);
+  --accent-text: var(--color-accent-400);
+  --accent-subtle-bg: color-mix(in srgb, var(--color-accent-500) 16%, transparent);
+  --accent-ring: var(--color-accent-400);
+
+  --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
+  --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
+  --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}
+
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+/*
+  Category sections are jump targets (the rail scrolls to #<slug>) sitting
+  under two stacked sticky elements: the global header (fixed height,
+  --header-height, always present above the hero too) and the menu
+  section's own search+rail block (variable height, measured). --rail-block-height
+  is set from JS via ResizeObserver on that second block's actual measured
+  height (see MenuSection.tsx), so this stays correct if that block's
+  contents ever change again, rather than needing a hand-maintained sum of
+  tokens kept in sync by hand. The calc() fallback covers the moment before
+  that JS runs (initial SSR paint).
+*/
+.category-section {
+  scroll-margin-top: calc(var(--header-height) + var(--rail-block-height, var(--rail-height)));
+}

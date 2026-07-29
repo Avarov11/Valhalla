@@ -1,0 +1,284 @@
+{
+  "brand": {
+    "name": "Valhalla",
+    "tagline": "Hall of Chimney Cakes",
+    "phone": "01000100115",
+    "whatsapp": "201000100115",
+    "instagram": "https://www.instagram.com/valhalla_chimney",
+    "facebook": "https://www.facebook.com/ValhallaChimney",
+    "tiktok": "https://www.tiktok.com/@Valhallaeg",
+    "mapPlaceName": "Valhalla - Chimney Cafe & Restaurant",
+    "mapLat": 30.1052087,
+    "mapLng": 31.3769701,
+    "currency": "EGP",
+    "taxNote": { "en": "Prices include taxes", "ar": "السعر شامل القيمة المضافة" },
+    "imageHost": "https://www.valhallachimney.com",
+    "logo": "/images/logo.png"
+  },
+  "note": "imagePath values are relative to brand.imageHost. They contain spaces and parentheses, so encode each path segment before use. Download all of these into /public and stop hotlinking the old host before going live.",
+  "emptyOnLiveSite": [
+    "New Items",
+    "Offers",
+    "Custom Cone Build",
+    "Custom Classic Build",
+    "Sundae"
+  ],
+  "categories": [
+    {
+      "slug": "sweet-cones",
+      "en": "Sweet Cones",
+      "ar": "كون حلو",
+      "blurb": "Filled sweet chimney cones",
+      "items": [
+        { "en": "Kinder", "desc": "Nut breading, Kinder spread, vanilla ice cream and Kinder drizzle.", "price": 155, "popular": true, "imagePath": "/menu-items/Sw 1 kinder.jpg" },
+        { "en": "Red Velvet", "desc": "Red velvet breading, white chocolate raspberry spread, vanilla ice cream and sweet sprinkles.", "price": 130, "popular": true, "imagePath": "/menu-items/SW 2 Red Velvet.jpg" },
+        { "en": "Oreo", "desc": "Oreo breading, milk chocolate spread, mixed ice cream and Oreo crumb.", "price": 120, "popular": true, "imagePath": "/menu-items/SW 3 Oreo.jpg" },
+        { "en": "Cinnamon", "desc": "Cinnamon sugar breading with caramel spread and vanilla ice cream.", "price": 110, "popular": false, "imagePath": "/menu-items/SW 4 Cinnamon.jpg" },
+        { "en": "Nutella", "desc": "Nut breading, Nutella spread, chocolate ice cream and sweet sprinkles.", "price": 175, "popular": true, "imagePath": "/menu-items/SW 5 Nutella.jpg" },
+        { "en": "Pistachio", "desc": "Pistachio breading, pistachio spread and ice cream.", "price": 190, "popular": true, "imagePath": "/menu-items/SW 6 Pistachio.jpg" },
+        { "en": "Raffaello", "desc": "Coconut breading, Raffaello spread, vanilla ice cream and Raffaello crumb.", "price": 125, "popular": false, "imagePath": "/menu-items/SW 7 Rafaelo.jpg" },
+        { "en": "Lotus", "desc": "Lotus breading, Lotus spread, vanilla ice cream and Lotus crumb.", "price": 115, "popular": true, "imagePath": "/menu-items/SW 8 Lotus.jpg" },
+        { "en": "Mango", "desc": "Sweet cone with mango flavour.", "price": 180, "popular": false, "imagePath": "/menu-items/SW 9 Mango.jpg" },
+        { "en": "Creme Brulee", "desc": "Sweet cone with creme brulee flavour.", "price": 190, "popular": false, "imagePath": "/menu-items/Creme brulee cone.jpg" }
+      ]
+    },
+    {
+      "slug": "sweet-classic",
+      "en": "Sweet Classic",
+      "ar": "كلاسيك حلو",
+      "blurb": "Classic chimney cakes",
+      "items": [
+        { "en": "Kinder", "desc": "Classic chimney with nut breading and Kinder spread.", "price": 160, "popular": true, "imagePath": "/cone-steps-breading/kinder-classic.png" },
+        { "en": "Red Velvet", "desc": "Classic chimney with red velvet breading and sweet spread.", "price": 125, "popular": true, "imagePath": "/cone-steps-breading/red-classic.jpg" },
+        { "en": "Oreo", "desc": "Classic chimney with Oreo breading and milk chocolate spread.", "price": 120, "popular": true, "imagePath": "/cone-steps-breading/oreo-classic.jpg" },
+        { "en": "Cinnamon", "desc": "Classic chimney with cinnamon sugar breading and caramel spread.", "price": 110, "popular": false, "imagePath": "/cone-steps-breading/cinna-classic.jpg" },
+        { "en": "Nutella", "desc": "Classic chimney with nut breading and Nutella spread.", "price": 178, "popular": true, "imagePath": "/nutella-classic.jpg" },
+        { "en": "Pistachio", "desc": "Classic chimney with pistachio breading and pistachio spread.", "price": 200, "popular": true, "imagePath": "/cone-steps-breading/pistash-classic.jpg" },
+        { "en": "Nutella Banana", "desc": "Classic chimney with Nutella banana spread.", "price": 200, "popular": false, "imagePath": "/nutella-classic.jpg" },
+        { "en": "Raffaello", "desc": "Classic chimney with coconut breading and Raffaello spread.", "price": 125, "popular": false, "imagePath": "/cone-steps-breading/raff-classic.png" },
+        { "en": "Lotus", "desc": "Classic chimney with Lotus breading and Lotus spread.", "price": 115, "popular": true, "imagePath": "/cone-steps-breading/lotus-classic.jpg" }
+      ]
+    },
+    {
+      "slug": "savory",
+      "en": "Savory",
+      "ar": "سيفوري",
+      "blurb": "Savory chimney sandwiches",
+      "items": [
+        { "en": "Salami", "desc": "Salami savory chimney.", "price": 180, "popular": false, "imagePath": "/salami savoury.jpg" },
+        { "en": "Turkey", "desc": "Turkey savory chimney.", "price": 180, "popular": false, "imagePath": "/menu-items/SV 3 Turkey.jpg" },
+        { "en": "Mix Cheese", "desc": "Mixed cheese savory chimney.", "price": 230, "popular": false, "imagePath": "/menu-items/SV 4 Mix Cheese.jpg" },
+        { "en": "Smoked Salmon", "desc": "Smoked salmon savory chimney.", "price": 300, "popular": false, "imagePath": "/menu-items/SV 5 Smoked Salmon.jpg" },
+        { "en": "Turkey Salami", "desc": "Turkey salami savory chimney.", "price": 190, "popular": false, "imagePath": "/salami savoury.jpg" },
+        { "en": "Fajita", "desc": "Fajita savory chimney.", "price": 210, "popular": false, "imagePath": "/menu-items/SV 7 Fajita.jpg" },
+        { "en": "Omelette", "desc": "Omelette savory chimney.", "price": 120, "popular": false, "imagePath": "/menu-items/SV 8 Omltette.jpg" },
+        { "en": "Hot Dog", "desc": "Hot dog savory chimney.", "price": 145, "popular": false, "imagePath": "/menu-items/SV 9 Hot Dog.jpg" },
+        { "en": "Cordon Bleu", "desc": "Cordon bleu savory chimney.", "price": 180, "popular": false, "imagePath": "/menu-items/SV 11 Cordon Blu.jpg" },
+        { "en": "Roast Beef", "desc": "Roast beef savory chimney.", "price": 200, "popular": false, "imagePath": "/menu-items/Savoury roast beef.png" },
+        { "en": "Milano", "desc": "Milano savory chimney.", "price": 165, "popular": false, "imagePath": "/menu-items/Milano.png" }
+      ]
+    },
+    {
+      "slug": "extras",
+      "en": "Extras & Sides",
+      "ar": "إضافات وأطباق جانبية",
+      "blurb": "Sides, salads, cheese and toppings",
+      "items": [
+        { "en": "Fries", "desc": "Extra fries.", "price": 60, "popular": false, "imagePath": "/menu-items/fries.png" },
+        { "en": "Cheesy Fries", "desc": "Cheesy fries.", "price": 60, "popular": false, "imagePath": "/menu-items/cheesy fries.jpg" },
+        { "en": "Chicken Strips", "desc": "Extra chicken strips.", "price": 60, "popular": false, "imagePath": "/menu-items/chicken strips.jpg" },
+        { "en": "Green Salad", "desc": "Extra green salad.", "price": 75, "popular": false, "imagePath": "/menu-items/green salad.jpg" },
+        { "en": "Greek Salad", "desc": "Extra greek salad.", "price": 100, "popular": false, "imagePath": "/menu-items/green salad.jpg" },
+        { "en": "Caesar Salad", "desc": "Extra caesar salad.", "price": 150, "popular": false, "imagePath": "/menu-items/ceasar salad.jpg" },
+        { "en": "Tuna Salad", "desc": "Extra tuna salad.", "price": 150, "popular": false, "imagePath": "/menu-items/Tuna salad.jpg" },
+        { "en": "Mozzarella Cheese", "desc": "Extra mozzarella cheese.", "price": 45, "popular": false, "imagePath": "/mozarella-cheese.jpg" },
+        { "en": "Chicken", "desc": "Extra chicken.", "price": 45, "popular": false, "imagePath": "/menu-items/chicken.jpg" },
+        { "en": "Kiri Cheese", "desc": "Extra kiri cheese.", "price": 45, "popular": false, "imagePath": "/menu-items/Kiri cheese.jpg" },
+        { "en": "Cheddar Cheese", "desc": "Extra cheddar cheese.", "price": 35, "popular": false, "imagePath": "/menu-items/cheddar sauce.jpg" },
+        { "en": "Romy Cheese", "desc": "Extra romy cheese.", "price": 30, "popular": false, "imagePath": "/menu-items/Romi cheese.jpg" },
+        { "en": "Cheddar Sauce", "desc": "Extra cheddar sauce.", "price": 20, "popular": false, "imagePath": "/menu-items/cheddar sauce.jpg" }
+      ]
+    },
+    {
+      "slug": "pizza",
+      "en": "Pizza",
+      "ar": "بيتزا",
+      "blurb": "Freshly baked pizzas",
+      "sizeLabels": { "a": "Medium", "b": "Large" },
+      "items": [
+        { "en": "Margherita", "desc": "Margherita pizza.", "sizes": { "Medium": 150, "Large": 190 }, "popular": false, "imagePath": "/menu-items/P 2 Margherita.jpg" },
+        { "en": "Mushroom", "desc": "Mushroom pizza.", "sizes": { "Medium": 170, "Large": 240 }, "popular": false, "imagePath": "/menu-items/P 1 Mushroom .jpg" },
+        { "en": "Hot Dog", "desc": "Hot dog pizza.", "sizes": { "Medium": 170, "Large": 260 }, "popular": false, "imagePath": "/menu-items/P 8 Hotdog.jpg" },
+        { "en": "Chicken", "desc": "Chicken pizza.", "sizes": { "Medium": 190, "Large": 285 }, "popular": false, "imagePath": "/menu-items/P 4 Chicken.jpg" },
+        { "en": "Mix Smoke", "desc": "Mix smoke pizza.", "sizes": { "Medium": 199, "Large": 320 }, "popular": false, "imagePath": "/menu-items/P 9 Mix Smoke.jpg" },
+        { "en": "Vegetables", "desc": "Vegetable pizza.", "sizes": { "Medium": 200, "Large": 285 }, "popular": false, "imagePath": "/menu-items/P 3 Vegetables.jpg" },
+        { "en": "Turkey Chicken", "desc": "Turkey and chicken pizza.", "sizes": { "Medium": 215, "Large": 310 }, "popular": false, "imagePath": "/menu-items/P 10 Mix Turkey Chicken.jpg" },
+        { "en": "Tuna", "desc": "Tuna pizza.", "sizes": { "Medium": 215, "Large": 355 }, "popular": false, "imagePath": "/menu-items/P 11 Tuna.jpg" },
+        { "en": "Pepperoni", "desc": "Pepperoni pizza.", "sizes": { "Medium": 230, "Large": 350 }, "popular": false, "imagePath": "/menu-items/P 5 Pepperoni.jpg" },
+        { "en": "Super Supreme", "desc": "Super supreme pizza.", "sizes": { "Medium": 260, "Large": 395 }, "popular": false, "imagePath": "/menu-items/P 7 Super Supreme.jpg" },
+        { "en": "Mix Cheese", "desc": "Mixed cheese pizza.", "sizes": { "Medium": 300, "Large": 455 }, "popular": false, "imagePath": "/menu-items/P 6 Mix Cheese.jpg" }
+      ]
+    },
+    {
+      "slug": "milkshakes",
+      "en": "Milkshakes",
+      "ar": "ميلك شيك",
+      "blurb": "Thick shakes",
+      "items": [
+        { "en": "Chocolate", "desc": "Chocolate milkshake.", "price": 110, "popular": false, "imagePath": "/milkshake-chocolate.jpg" },
+        { "en": "Kinder", "desc": "Kinder milkshake.", "price": 140, "popular": false, "imagePath": "/milkshake kinder.jpg" },
+        { "en": "Vanilla", "desc": "Vanilla milkshake.", "price": 140, "popular": false, "imagePath": "/milkshake-vanilla.jpg" },
+        { "en": "Oreo", "desc": "Oreo milkshake.", "price": 140, "popular": false, "imagePath": "/menu-items/milkshake oreo.jpg" },
+        { "en": "Lotus", "desc": "Lotus milkshake.", "price": 140, "popular": false, "imagePath": "/menu-items/milkshake Lotus.jpg" },
+        { "en": "Pineapple", "desc": "Pineapple milkshake.", "price": 140, "popular": false, "imagePath": "/menu-items/Milkshake pineapple.jpg" },
+        { "en": "Blueberry", "desc": "Blueberry milkshake.", "price": 140, "popular": false, "imagePath": "/aa461d4d-9127-4f40-9059-2d01ee23d75c.jpg" }
+      ]
+    },
+    {
+      "slug": "mojitos",
+      "en": "Mojitos",
+      "ar": "موهيتو",
+      "blurb": "Iced mojitos",
+      "items": [
+        { "en": "Classic", "desc": "Classic mojito.", "price": 85, "popular": false, "imagePath": "/menu-items/mojito-classic.jpg" },
+        { "en": "Strawberry", "desc": "Strawberry mojito.", "price": 85, "popular": false, "imagePath": "/menu-items/mojito-strawberry.jpg" },
+        { "en": "Blueberry", "desc": "Blueberry mojito.", "price": 85, "popular": false, "imagePath": "/menu-items/Mojito blueberry.jpg" },
+        { "en": "Peach", "desc": "Peach mojito.", "price": 85, "popular": false, "imagePath": "/menu-items/mojito peach.jpg" },
+        { "en": "Passion Fruit", "desc": "Passion fruit mojito.", "price": 85, "popular": false, "imagePath": "/menu-items/mojito passion fruit.jpg" },
+        { "en": "Raspberry", "desc": "Raspberry mojito.", "price": 85, "popular": false, "imagePath": "/menu-items/mojito-rasperry.jpg" },
+        { "en": "Kiwi", "desc": "Kiwi mojito.", "price": 85, "popular": false, "imagePath": "/menu-items/mojito-kiwi.jpg" },
+        { "en": "Blue Curacao", "desc": "Blue curacao mojito.", "price": 100, "popular": false, "imagePath": "/Blue curacao mojito.jpg" }
+      ]
+    },
+    {
+      "slug": "smoothies",
+      "en": "Smoothies",
+      "ar": "سموذي",
+      "blurb": "Blended fruit smoothies",
+      "items": [
+        { "en": "Strawberry", "desc": "Strawberry smoothie.", "price": 100, "popular": false, "imagePath": "/straw-smoothie.jpg" },
+        { "en": "Mango", "desc": "Mango smoothie.", "price": 100, "popular": false, "imagePath": "/mango-smoothie.jpg" },
+        { "en": "Watermelon", "desc": "Watermelon smoothie.", "price": 100, "popular": false, "imagePath": "/water-mellone-smoothie.jpg" },
+        { "en": "Blueberry", "desc": "Blueberry smoothie.", "price": 100, "popular": false, "imagePath": "/blue-berry-smoothie.jpg" },
+        { "en": "Raspberry", "desc": "Raspberry smoothie.", "price": 100, "popular": false, "imagePath": "/rasperry-smoothie.jpg" },
+        { "en": "Mixberry", "desc": "Mixed berry smoothie.", "price": 100, "popular": false, "imagePath": "/mix-berry-smoothie.jpg" },
+        { "en": "Passion Fruit", "desc": "Passion fruit smoothie.", "price": 100, "popular": false, "imagePath": "/passion-fruit-smoothie.jpg" },
+        { "en": "Pineapple", "desc": "Pineapple smoothie.", "price": 100, "popular": false, "imagePath": "/pin-apple-smoothies.jpg" },
+        { "en": "Peach", "desc": "Peach smoothie.", "price": 100, "popular": false, "imagePath": "/peach-smoothie.jpg" }
+      ]
+    },
+    {
+      "slug": "yogurt",
+      "en": "Yogurt",
+      "ar": "زبادي",
+      "blurb": "Yogurt drinks",
+      "items": [
+        { "en": "Strawberry", "desc": "Strawberry yogurt.", "price": 75, "popular": false, "imagePath": "/menu-items/yogurt strawberry.jpg" },
+        { "en": "Mango", "desc": "Mango yogurt.", "price": 75, "popular": false, "imagePath": "/mango-yogurt.jpg" },
+        { "en": "Watermelon", "desc": "Watermelon yogurt.", "price": 75, "popular": false, "imagePath": "/Watermelon yogurt.jpg" },
+        { "en": "Blueberry", "desc": "Blueberry yogurt.", "price": 75, "popular": false, "imagePath": "/menu-items/yogurt blueberry.jpg" },
+        { "en": "Raspberry", "desc": "Raspberry yogurt.", "price": 75, "popular": false, "imagePath": "/raspberry yogurt.jpg" },
+        { "en": "Mixberry", "desc": "Mixed berry yogurt.", "price": 75, "popular": false, "imagePath": "/Mix berries yogurt.jpg" },
+        { "en": "Passion Fruit", "desc": "Passion fruit yogurt.", "price": 75, "popular": false, "imagePath": "/passion fruit yogurt (2).jpg" },
+        { "en": "Pineapple", "desc": "Pineapple yogurt.", "price": 75, "popular": false, "imagePath": "/menu-items/Yogurt pineapple.jpg" },
+        { "en": "Peach", "desc": "Peach yogurt.", "price": 75, "popular": false, "imagePath": "/peach yogurt.jpg" },
+        { "en": "Kiwi", "desc": "Kiwi yogurt.", "price": 75, "popular": false, "imagePath": "/kiwi-yogurt.jpg" }
+      ]
+    },
+    {
+      "slug": "juice",
+      "en": "Fresh Juice",
+      "ar": "عصائر طازجة",
+      "blurb": "Fresh fruit juices",
+      "items": [
+        { "en": "Lemon Mint", "desc": "Fresh lemon mint juice.", "price": 75, "popular": false, "imagePath": "/lemon-mint.jpg" },
+        { "en": "Strawberry", "desc": "Fresh strawberry juice.", "price": 80, "popular": false, "imagePath": "/eb3d1dbb-83fe-4201-b9d9-46d715e6c093.jpg" },
+        { "en": "Mango", "desc": "Fresh mango juice.", "price": 85, "popular": false, "imagePath": "/images/menu/juice-mango.jpg" },
+        { "en": "Guava", "desc": "Fresh guava juice.", "price": 85, "popular": false, "imagePath": "/guava-juice.jpg" },
+        { "en": "Watermelon", "desc": "Fresh watermelon juice.", "price": 90, "popular": false, "imagePath": "/watermellon.jpg" },
+        { "en": "Florida Cocktail", "desc": "Florida cocktail juice.", "price": 90, "popular": false, "imagePath": "/florida-juice.jpg" },
+        { "en": "Kiwi", "desc": "Fresh kiwi juice.", "price": 100, "popular": false, "imagePath": "/kiwi-juice.jpg" },
+        { "en": "Mango Peach", "desc": "Fresh mango peach juice.", "price": 100, "popular": false, "imagePath": "/mango-peach.jpg" },
+        { "en": "Pinacolada Cocktail", "desc": "Pinacolada cocktail juice.", "price": 100, "popular": false, "imagePath": "/colada-cocktail.jpg" }
+      ]
+    },
+    {
+      "slug": "hot-drinks",
+      "en": "Hot Drinks",
+      "ar": "مشروبات ساخنة",
+      "blurb": "Tea, sahlab, cider and hot chocolate",
+      "items": [
+        { "en": "Tea", "desc": "Tea.", "price": 45, "popular": false, "imagePath": "/tea.jpg" },
+        { "en": "Flavoured Tea", "desc": "Flavoured tea.", "price": 50, "popular": false, "imagePath": "/tea-mint.jpg" },
+        { "en": "Isis", "desc": "Isis herbal infusion.", "price": 50, "popular": false, "imagePath": "/isis.jpg" },
+        { "en": "Hot Cider", "desc": "Hot cider.", "price": 50, "popular": false, "imagePath": "/cidar.jpg" },
+        { "en": "Sahlab", "desc": "Sahlab.", "price": 50, "popular": false, "imagePath": "/sahlab.jpg" },
+        { "en": "Sahlab Nutella", "desc": "Sahlab with Nutella.", "price": 65, "popular": false, "imagePath": "/sahlab nutella.jpg" },
+        { "en": "Sahlab Pistachio", "desc": "Sahlab with pistachio.", "price": 65, "popular": false, "imagePath": "/sahlab pistachio (2).jpg" },
+        { "en": "Hot Chocolate", "desc": "Hot chocolate.", "price": 65, "popular": false, "imagePath": "/images/menu/hot-chocolate.jpg" }
+      ]
+    },
+    {
+      "slug": "hot-coffee",
+      "en": "Hot Coffee",
+      "ar": "قهوة ساخنة",
+      "blurb": "Espresso bar",
+      "sizeLabels": { "a": "Single", "b": "Double" },
+      "items": [
+        { "en": "Turkish Coffee", "desc": "Traditional Turkish coffee.", "sizes": { "Single": 55, "Double": 60 }, "popular": false, "imagePath": "/menu-items/Turkish coffee.jpg" },
+        { "en": "Espresso", "desc": "Espresso.", "sizes": { "Single": 60, "Double": 70 }, "popular": false, "imagePath": "/menu-items/Espresso.jpg" },
+        { "en": "American Coffee", "desc": "American coffee.", "sizes": { "Single": 60, "Double": 80 }, "popular": false, "imagePath": "/menu-items/American coffee.jpg" },
+        { "en": "Macchiato", "desc": "Macchiato.", "sizes": { "Single": 70, "Double": 80 }, "popular": false, "imagePath": "/menu-items/Macchiato.jpg" },
+        { "en": "Cappuccino", "desc": "Cappuccino.", "sizes": { "Single": 80, "Double": 100 }, "popular": true, "imagePath": "/menu-items/Cappuccino.jpg" },
+        { "en": "French Coffee", "desc": "French coffee.", "price": 70, "popular": false, "imagePath": "/menu-items/French coffee.jpg" },
+        { "en": "Turkish Hazelnut", "desc": "Turkish coffee with hazelnut.", "price": 75, "popular": false, "imagePath": "/turkish-hazultnut.jpg" },
+        { "en": "Latte", "desc": "Latte.", "price": 90, "popular": false, "imagePath": "/menu-items/Latte.jpg" },
+        { "en": "Cinnamon Honey Latte", "desc": "Cinnamon honey latte.", "price": 95, "popular": false, "imagePath": "/menu-items/Cinnamon honey latte.jpg" },
+        { "en": "Mocha", "desc": "Mocha.", "price": 110, "popular": false, "imagePath": "/menu-items/Mocha.jpg" },
+        { "en": "White Mocha", "desc": "White mocha.", "price": 110, "popular": false, "imagePath": "/menu-items/White mocha.jpg" },
+        { "en": "Latte De Leche", "desc": "Latte de leche.", "price": 115, "popular": false, "imagePath": "/menu-items/Latte de lecce.jpg" },
+        { "en": "Flat White", "desc": "Flat white.", "price": 120, "popular": false, "imagePath": "/menu-items/Flat white.jpg" },
+        { "en": "Spanish Latte", "desc": "Spanish latte.", "price": 140, "popular": true, "imagePath": "/menu-items/Latte de lecce.jpg" }
+      ]
+    },
+    {
+      "slug": "cold-coffee",
+      "en": "Cold Coffee",
+      "ar": "قهوة باردة",
+      "blurb": "Iced and frappe coffee",
+      "items": [
+        { "en": "Ice Latte", "desc": "Ice latte.", "price": 90, "popular": false, "imagePath": "/menu-items/Ice latte.jpg" },
+        { "en": "Frappe Latte", "desc": "Frappe latte.", "price": 90, "popular": false, "imagePath": "/menu-items/Frappe latte.jpg" },
+        { "en": "Frappe Caramel", "desc": "Frappe caramel.", "price": 90, "popular": false, "imagePath": "/menu-items/Frappe latte.jpg" },
+        { "en": "Frappe Coffee", "desc": "Frappe coffee.", "price": 90, "popular": false, "imagePath": "/menu-items/Frappe latte.jpg" },
+        { "en": "Ice Latte De Leche", "desc": "Ice latte de leche.", "price": 95, "popular": false, "imagePath": "/menu-items/Ice latte.jpg" },
+        { "en": "Ice White Mocha", "desc": "Ice white mocha.", "price": 110, "popular": false, "imagePath": "/ice-white-mocha.jpg" },
+        { "en": "Ice Dark Mocha", "desc": "Ice dark mocha.", "price": 110, "popular": false, "imagePath": "/ice-dark-mocha.jpg" },
+        { "en": "Ice Spanish Latte", "desc": "Ice Spanish latte.", "price": 140, "popular": true, "imagePath": "/menu-items/Ice latte.jpg" },
+        { "en": "Tiramisu Latte", "desc": "Tiramisu latte.", "price": 200, "popular": false, "imagePath": "/menu-items/Ice Tiramisu Latte.jpg" }
+      ]
+    },
+    {
+      "slug": "bakery",
+      "en": "Bakery",
+      "ar": "مخبوزات",
+      "blurb": "Fresh bakery",
+      "items": [
+        { "en": "Croissant", "desc": "Plain croissant.", "price": 70, "popular": false, "imagePath": "/croissant.jpg" },
+        { "en": "White Cheese Croissant", "desc": "Croissant with white cheese.", "price": 85, "popular": false, "imagePath": "/white-cheese.jpg" },
+        { "en": "Turkey Cheddar Croissant", "desc": "Croissant with turkey and cheddar.", "price": 100, "popular": false, "imagePath": "/croissant turkey cheddar.jpg" }
+      ]
+    },
+    {
+      "slug": "cakes",
+      "en": "Cakes",
+      "ar": "كيك",
+      "blurb": "Cake slices and desserts",
+      "items": [
+        { "en": "Cheesecake", "desc": "Cheesecake slice.", "price": 100, "popular": false, "imagePath": "/Cheesecake strawberry.jpg" },
+        { "en": "Molten Cake", "desc": "Molten chocolate cake.", "price": 100, "popular": false, "imagePath": "/molten-cake.jpg" },
+        { "en": "Tiramisu", "desc": "Tiramisu slice.", "price": 110, "popular": false, "imagePath": "/teramisu-cake.jpg" }
+      ]
+    }
+  ]
+}
