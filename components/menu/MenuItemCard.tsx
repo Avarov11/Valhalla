@@ -61,7 +61,19 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
         aria-label={`View ${item.name_en}, ${hasSizes ? "from " : ""}${formatPrice(displayPrice)}${!isAvailable ? ", sold out" : ""}`}
         className="flex flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-(--accent-ring) focus-visible:outline-offset-[-2px]"
       >
-        <div className="relative aspect-[4/5] w-full bg-(--bg-unavailable)">
+        {/*
+          Square, not the original aspect-[4/5]: checked the real source
+          dimensions (sharp against storage). Sweet Classic's rolls are
+          1.25:1 landscape, which a 4:5 portrait frame forced object-cover
+          to crop ~36% off the width to fill, cutting into the product on
+          both sides. Sweet Cones' photos are natively 1:1 and were
+          themselves losing ~20% under the old portrait frame. Square
+          fits the cones exactly and cuts the rolls' crop to ~20%, the
+          best single ratio for a corpus with this much aspect variance
+          across categories, without breaking "one consistent frame
+          across all 134".
+        */}
+        <div className="relative aspect-square w-full bg-(--bg-unavailable)">
           {item.image_url ? (
             <Image
               src={item.image_url}
