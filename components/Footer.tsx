@@ -30,24 +30,28 @@ const socials = [
 ];
 
 /**
- * Variance 8, second pass (2026-07-28). The first version was an even
- * two-column grid, contact info beside the map, nothing wrong with it
- * and nothing that made it feel like part of the same page as the new
- * hero either. Pushed further: an oversized wordmark carries real
- * typographic weight instead of a small logo-sized lockup, the columns
- * are asymmetric (3fr/2fr, not 1fr/1fr), and the map panel is pulled up
- * with a negative margin so it overlaps the content column, the same
- * overlap device the hero uses, on purpose, so the two bookend sections
- * read as one design system rather than two different templates.
+ * Redesign (2026-07-29): the giant low-contrast background wordmark is
+ * the same device Hero opens the page with, bleeding off the LEFT edge
+ * here rather than the right, so the two bookends visually rhyme instead
+ * of repeating identically. Asymmetric columns (3fr/2fr) and the map
+ * panel pulled up over the content column via negative margin carry over
+ * from the previous pass, both still fit the brief's "not centred" and
+ * "overlap, not two clean rectangles" instincts.
  */
 export function Footer() {
   return (
-    <footer className="overflow-hidden border-t border-(--border-default) bg-(--bg-page)">
-      <div className="mx-auto max-w-(--page-max-width) px-4 pt-12 lg:px-10 lg:pt-16">
-        <p className="font-(family-name:--font-display) text-(length:--text-display-lg) leading-(--leading-tight) tracking-(--tracking-tight) text-(--text-primary)">
-          Valhalla
+    <footer className="relative overflow-hidden border-t border-(--border-default) bg-(--bg-page)">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-[0.22em] -left-[0.1em] select-none font-(family-name:--font-display) text-[34vw] font-bold leading-none tracking-(--tracking-tighter) text-(--border-default) lg:text-[20vw]"
+      >
+        VALHALLA
+      </span>
+
+      <div className="relative z-10 mx-auto max-w-(--page-max-width) px-4 pt-12 lg:px-10 lg:pt-16">
+        <p className="font-(family-name:--font-display) text-(length:--text-display-sm) leading-(--leading-tight) tracking-(--tracking-tight) text-(--text-primary)">
+          Hall of Chimney Cakes
         </p>
-        <p className="mt-1 text-(length:--text-md) text-(--text-secondary)">Hall of Chimney Cakes</p>
       </div>
 
       <div className="mx-auto grid max-w-(--page-max-width) gap-10 px-4 pb-12 pt-8 lg:grid-cols-[3fr_2fr] lg:px-10 lg:pb-16 lg:pt-10">
@@ -55,7 +59,7 @@ export function Footer() {
           <div className="flex flex-col gap-2">
             <a
               href="tel:+201000100115"
-              className="flex w-fit items-center gap-2 text-(length:--text-sm) text-(--text-secondary) hover:text-(--text-primary)"
+              className="flex min-h-11 w-fit items-center gap-2 text-(length:--text-sm) text-(--text-secondary) hover:text-(--text-primary)"
             >
               <Phone size={18} />
               01000100115
@@ -64,7 +68,7 @@ export function Footer() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-fit items-center gap-2 text-(length:--text-sm) text-(--text-secondary) hover:text-(--text-primary)"
+              className="flex min-h-11 w-fit items-center gap-2 text-(length:--text-sm) text-(--text-secondary) hover:text-(--text-primary)"
             >
               <WhatsappLogo size={18} />
               Order on WhatsApp
@@ -79,7 +83,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={name}
-                className="flex h-9 w-9 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
+                className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
               >
                 <Icon size={18} />
               </a>

@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { Outfit, Plus_Jakarta_Sans, Cairo } from "next/font/google";
+import { Bricolage_Grotesque, Public_Sans, Cairo } from "next/font/google";
+import { MotionConfig } from "motion/react";
+import { getMenu } from "@/lib/menu/get-menu";
+import { CartProvider } from "@/lib/cart/cart-context";
 import "./globals.css";
 
-const outfit = Outfit({
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-bricolage",
   display: "swap",
 });
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const publicSans = Public_Sans({
   subsets: ["latin"],
-  variable: "--font-plus-jakarta-sans",
+  variable: "--font-public-sans",
   display: "swap",
 });
 
@@ -20,21 +23,35 @@ const cairo = Cairo({
   display: "swap",
 });
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Valhalla - Hall of Chimney Cakes",
   description:
     "Valhalla chimney cake cafe and restaurant. Browse the menu and order on WhatsApp.",
 };
 
-export default function RootLayout({
+/**
+ * Fetches the menu once here (in addition to page.tsx's own fetch for the
+ * grid) so the cart context can be provided above both `children` and the
+ * `modal` parallel slot. Item detail is a real route now
+ * (app/item/[id], intercepted from within the app via app/@modal), which
+ * put "add to cart" in a subtree that shares no client ancestor with the
+ * main page's grid unless the provider sits up here, at the root.
+ */
+export default async function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
+  const menu = await getMenu();
+
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${plusJakartaSans.variable} ${cairo.variable}`}
+      className={`${bricolage.variable} ${publicSans.variable} ${cairo.variable}`}
       // The inline script below sets data-theme on this element directly,
       // before hydration, to avoid a flash of the wrong theme. The server
       // never renders that attribute (it has no access to localStorage),
@@ -52,7 +69,12 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('valhalla-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
           }}
         />
-        {children}
+        <MotionConfig reducedMotion="user">
+          <CartProvider menu={menu}>
+            {children}
+            {modal}
+          </CartProvider>
+        </MotionConfig>
       </body>
     </html>
   );

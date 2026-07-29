@@ -9,9 +9,15 @@ type HeaderProps = {
   onOpenCart: () => void;
 };
 
+/**
+ * Below lg: wordmark and theme toggle only, "low-frequency controls" per
+ * REDESIGN.md, since menu/search/cart moved to BottomBar for one-handed
+ * reach. At lg and up, where BottomBar is hidden, the cart button comes
+ * back here since there's no other persistent place for it.
+ */
 export function Header({ itemCount, onOpenCart }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-(--z-header) flex h-(--header-height) items-center justify-between border-b border-(--border-default) bg-(--bg-page) px-4">
+    <header className="sticky top-0 z-(--z-header) flex h-(--header-height) items-center justify-between border-b border-(--border-default) bg-(--bg-page) px-4 lg:px-6">
       <span className="font-(family-name:--font-display) text-(length:--text-xl) tracking-(--tracking-tight) text-(--text-primary)">
         Valhalla
       </span>
@@ -23,13 +29,10 @@ export function Header({ itemCount, onOpenCart }: HeaderProps) {
           type="button"
           onClick={onOpenCart}
           aria-label={`Open cart, ${itemCount} item${itemCount === 1 ? "" : "s"}`}
-          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
+          className="relative hidden h-11 w-11 shrink-0 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90 lg:flex"
         >
           <ShoppingCart size={18} />
           {itemCount > 0 ? (
-            // key={itemCount} forces a remount on every change, so the pop-in
-            // (feedback that the cart actually updated) replays each time,
-            // not just the first time the badge appears.
             <motion.span
               key={itemCount}
               initial={{ scale: 1.35 }}

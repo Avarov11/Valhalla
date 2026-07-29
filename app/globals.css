@@ -2,14 +2,28 @@
 
 /*
   Valhalla design tokens.
-  See design/PLAN.md for the reasoning behind each choice.
 
-  Redesign mode (2026-07-28): overhaul, visual language only. Palette below
-  is "Fire-Lit Hall", the direction picked after the three-way comparison.
-  The old rose ramp (anchored on #BE185D) is gone from this file entirely,
-  it was never in the actual logo mark (sampled pixel by pixel: the mark is
-  black ink, the pink was one export's background fill), so nothing about
-  preserving it was load-bearing.
+  Redesign (2026-07-29): full visual/structural overhaul per REDESIGN.md.
+  Ember is dropped. Accent is a deep saturated rose anchored on #be185d,
+  the old site's own theme-color meta value, picked this time because it
+  sits far enough from the photo corpus's pale pink panel (#ea87b7) to read
+  as a separate, deliberate colour rather than a wash of the same pink.
+  Verified computationally (not eyeballed):
+    - accent-600 (#be185d) vs white button text: 6.04:1
+    - accent-600 vs the pale photo panel #ea87b7: 2.49:1 contrast,
+      Euclidean RGB distance 149.5/441 (deep saturated magenta-rose vs a
+      pale desaturated pastel pink; different enough in both hue and value
+      to read as separate at a glance, confirmed against real photos, not
+      just this ratio)
+    - accent-700 (#9d174d) as body text on light bg-page: 7.08:1
+    - accent-600 as body text on DARK bg-page: only 3.11:1, fails 4.5:1.
+      This is the real "warm mid-tone fails body text" case the brief
+      predicted, it just lands in dark mode rather than light mode for
+      this hue. accent-400 (#e56ba0) is used for dark-mode running text
+      instead, verified 6.20:1.
+  Neutral ramp is untouched: it was already warm charcoal/brass, never
+  ember-coloured, so "the fire-lit warmth stays in the neutrals" falls out
+  for free.
 
   Radius rule (documented once, followed everywhere):
     - Buttons, badges, chips, rail pills, tags -> --radius-pill (interactive = pill, always)
@@ -17,24 +31,24 @@
     - Inputs, search bar                        -> --radius-md
     - Small elements (checkboxes, tiny tags)    -> --radius-sm
 
-  Color rule: one accent (ember). Every step below is the SAME hue at a
+  Color rule: one accent (rose). Every step below is the SAME hue at a
   different lightness, never a second color. Unavailable / error / empty
   states use neutral charcoal tones + icon + copy, not a second accent.
 */
 
 @theme {
-  /* ---- Accent ramp (Ember, anchored on #cc3d17) ---- */
-  --color-accent-50: #fdf1ec;
-  --color-accent-100: #fbe0d3;
-  --color-accent-200: #f6c1a8;
-  --color-accent-300: #f09b74;
-  --color-accent-400: #e76f45;
-  --color-accent-500: #dc4f24;
-  --color-accent-600: #cc3d17; /* brand anchor: dark-mode solid fill */
-  --color-accent-700: #a83112; /* light-mode solid fill, dark-mode hover */
-  --color-accent-800: #852812; /* light-mode hover */
-  --color-accent-900: #6b2211;
-  --color-accent-950: #3a1008;
+  /* ---- Accent ramp (Rose, anchored on #be185d) ---- */
+  --color-accent-50: #fdf2f6;
+  --color-accent-100: #fce7ef;
+  --color-accent-200: #fad0e0;
+  --color-accent-300: #f2a8c8;
+  --color-accent-400: #e56ba0;
+  --color-accent-500: #d1266f;
+  --color-accent-600: #be185d; /* brand anchor: dark-mode solid fill */
+  --color-accent-700: #9d174d; /* light-mode solid fill, dark-mode hover, dark-mode text */
+  --color-accent-800: #7d1440; /* light-mode hover */
+  --color-accent-900: #5c0f30;
+  --color-accent-950: #3d0a20;
 
   /* ---- Neutral ramp (Charcoal/brass: warm, not cool Zinc/Slate) ---- */
   --color-neutral-50: #f7f2ec;
@@ -51,13 +65,20 @@
 
   /* ---- Type families ----
      Values point at the CSS variables next/font/google generates on
-     <html> in app/layout.tsx (--font-outfit etc), not literal font-family
-     name strings, so the self-hosted, optimized font actually loads. */
-  --font-display: var(--font-outfit), "Segoe UI", system-ui, sans-serif;
-  --font-body: var(--font-plus-jakarta-sans), "Segoe UI", system-ui, sans-serif;
+     <html> in app/layout.tsx (--font-bricolage etc), not literal
+     font-family name strings, so the self-hosted, optimized font
+     actually loads.
+     Display: Bricolage Grotesque, real ink-trap character at large sizes,
+     doing the work the hero photograph used to do.
+     Body: Public Sans, warm and comfortable at reading sizes, unrelated
+     letterforms from the display face so pairing reads as deliberate. */
+  --font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-public-sans), "Segoe UI", system-ui, sans-serif;
   --font-arabic: var(--font-cairo), "Segoe UI", system-ui, sans-serif;
 
-  /* ---- Type scale (mobile-first, rem) ---- */
+  /* ---- Type scale (mobile-first, rem). Genuine range: the hero display
+     step reaches ~7.5rem (120px) at wide viewports, because type is
+     carrying the page now, not sitting quietly at 48px. ---- */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -66,13 +87,15 @@
   --text-xl: 1.5rem;
   --text-2xl: 1.875rem;
   --text-3xl: 2.25rem;
-  --text-display-sm: clamp(2rem, 1.5rem + 2vw, 2.75rem);
-  --text-display-lg: clamp(2.25rem, 1.4rem + 3.2vw, 3.75rem);
+  --text-display-sm: clamp(2.25rem, 1.6rem + 2.6vw, 3.25rem);
+  --text-display-md: clamp(3rem, 1.9rem + 4.5vw, 5rem);
+  --text-display-lg: clamp(2.5rem, 1.7rem + 4.2vw, 5rem);
 
-  --leading-tight: 1.1;
-  --leading-snug: 1.3;
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
   --leading-normal: 1.5;
-  --tracking-tight: -0.02em;
+  --tracking-tight: -0.03em;
+  --tracking-tighter: -0.045em;
   --tracking-wide: 0.02em;
 
   /* ---- Radius ---- */
@@ -102,13 +125,15 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ---- Layout constants ---- */
-  --header-height: 4.5rem;
+  --header-height: 3.75rem;
   --rail-height: 3.5rem;
+  --bottom-bar-height: 4rem;
   --page-max-width: 80rem;
 
   /* ---- Z-index scale (documented, no arbitrary z-50 spam) ---- */
   --z-header: 40;
   --z-rail: 30;
+  --z-bottom-bar: 45;
   --z-cart-sheet: 50;
   --z-modal: 60;
   --z-toast: 70;
@@ -145,6 +170,18 @@
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
   --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
   --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
+
+  /* Deliberately NOT part of the light/dark flip below. The menu card's
+     footer plate overlaps the bottom of the product photo to take
+     control of the template's white wave (see MenuItemCard.tsx); sampled
+     the real pixels of that wave (Kinder, storage), it is flat #ffffff,
+     at least 116px deep in a 1600px source image, too tall to crop past
+     without cutting into the product itself. A plate that stayed on the
+     theme flip would go dark in dark mode while the wave stays white,
+     which is a worse seam than the one being fixed. This token exists so
+     that one component can reference a named, documented value instead
+     of a bare hex literal, while still never changing with the theme. */
+  --surface-fixed-light: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -164,17 +201,18 @@
     --border-default: var(--color-neutral-800);
     --border-strong: var(--color-neutral-700);
 
-    /* 600/700 verified 4.94:1 / 6.75:1 for white button text (4.5:1 min),
-       darkens on hover same as light mode. accent-400 verified 6.04:1 as
-       plain text against neutral-950 (accent-text/ring aren't button
-       fills, they sit directly on the page background). */
+    /* 600/700 verified 6.04:1 / 7.88:1 for white button text (4.5:1 min).
+       accent-400 verified 6.20:1 as plain text against neutral-950
+       (accent-600 itself only manages 3.11:1 as plain text on this dark
+       background, which fails body-text AA, so accent-text uses 400
+       here instead of mirroring the button-fill shade). */
     --accent-solid: var(--color-accent-600);
     --accent-solid-hover: var(--color-accent-700);
     --accent-text: var(--color-accent-400);
     --accent-subtle-bg: color-mix(in srgb, var(--color-accent-500) 16%, transparent);
     --accent-ring: var(--color-accent-400);
 
-    /* Warm-tinted (ember-adjacent), not neutral black, for "fire-lit" depth. */
+    /* Warm-tinted (rose-adjacent), not neutral black, for "fire-lit" depth. */
     --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
     --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
     --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
@@ -230,10 +268,6 @@
   --border-default: var(--color-neutral-800);
   --border-strong: var(--color-neutral-700);
 
-  /* 600/700 verified 4.94:1 / 6.75:1 for white button text (4.5:1 min),
-     darkens on hover same as light mode. accent-400 verified 6.04:1 as
-     plain text against neutral-950 (accent-text/ring aren't button
-     fills, they sit directly on the page background). */
   --accent-solid: var(--color-accent-600);
   --accent-solid-hover: var(--color-accent-700);
   --accent-text: var(--color-accent-400);
@@ -277,4 +311,12 @@ body {
 */
 .category-section {
   scroll-margin-top: calc(var(--header-height) + var(--rail-block-height, var(--rail-height)));
+}
+
+/* Persistent bottom bar on phone/tablet needs the page's last content to
+   clear it, plus the iOS home-indicator safe area beneath the bar itself. */
+@media (max-width: 1023.98px) {
+  body {
+    padding-bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom));
+  }
 }
