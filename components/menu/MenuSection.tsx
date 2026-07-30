@@ -82,7 +82,7 @@ export function MenuSection({ menu }: MenuSectionProps) {
             ) : null}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5">
             {category.menu_items.map((item) => (
               <MenuItemCard key={item.id} item={item} />
             ))}

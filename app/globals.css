@@ -194,18 +194,6 @@
      glow reads as "in stock and worth looking at" rather than sitting
      under every card regardless of state. */
   --shadow-card: 0 14px 32px -8px rgba(190, 24, 93, 0.22), 0 4px 10px -2px rgba(190, 24, 93, 0.1);
-
-  /* Deliberately NOT part of the light/dark flip below. The menu card's
-     footer plate overlaps the bottom of the product photo to take
-     control of the template's white wave (see MenuItemCard.tsx); sampled
-     the real pixels of that wave (Kinder, storage), it is flat #ffffff,
-     at least 116px deep in a 1600px source image, too tall to crop past
-     without cutting into the product itself. A plate that stayed on the
-     theme flip would go dark in dark mode while the wave stays white,
-     which is a worse seam than the one being fixed. This token exists so
-     that one component can reference a named, documented value instead
-     of a bare hex literal, while still never changing with the theme. */
-  --surface-fixed-light: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
