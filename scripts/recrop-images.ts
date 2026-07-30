@@ -5,39 +5,29 @@ import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
 
 const BUCKET = "menu-images";
-const LONG_SIDE = 1200;
+const TARGET = 1200;
 const WEBP_QUALITY = 85;
 
-// Kept in sync with lib/menu/category-aspect.ts by hand (this script runs
-// standalone via tsx, outside the Next.js path-alias resolution the app
-// itself uses, so it isn't imported directly). Width / height, measured
-// from the real source photos, not one universal square: see that file's
-// comment for the full reasoning and the per-category sample sizes.
-const CATEGORY_ASPECT: Record<string, number> = {
-  "sweet-cones": 1,
-  "sweet-classic": 1.25,
-  savory: 1,
-  extras: 1,
-  pizza: 1,
-  milkshakes: 0.91,
-  mojitos: 0.91,
-  smoothies: 0.67,
-  yogurt: 0.67,
-  juice: 0.67,
-  "hot-drinks": 1,
-  "hot-coffee": 1,
-  "cold-coffee": 1,
-  bakery: 0.67,
-  cakes: 0.8,
-};
-const DEFAULT_ASPECT = 1;
-
-function targetDimensions(aspect: number): { width: number; height: number } {
-  if (aspect >= 1) {
-    return { width: LONG_SIDE, height: Math.round(LONG_SIDE / aspect) };
-  }
-  return { width: Math.round(LONG_SIDE * aspect), height: LONG_SIDE };
-}
+// A row/column counts as "content" if enough individual pixels differ
+// from the background colour by enough, not the row's average: thin
+// content near an edge (turkey curls poking above a sandwich, a cone's
+// whipped-cream peak) doesn't move a whole-row average far past a flat
+// background colour, but it is real product and an average-based trim
+// crops straight through it.
+const PIXEL_THRESHOLD = 30;
+const COUNT_FRACTION = 0.02;
+// Only trim when it removes a plausible amount of flat background, not
+// a near-no-op (already-tight photo) or a degenerate sliver (a busy
+// lifestyle shot with no flat backdrop at all, where this detection
+// isn't meaningful).
+const MIN_TRIM_AREA_RATIO = 0.15;
+const MAX_TRIM_AREA_RATIO = 0.85;
+// Generous, asymmetric padding back around the detected box, sized off
+// the full image rather than the box itself: irregular product edges
+// need real headroom, not a small proportional buffer.
+const PAD_TOP = 0.15;
+const PAD_BOTTOM = 0.08;
+const PAD_SIDE = 0.08;
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -47,31 +37,103 @@ function requireEnv(name: string): string {
   return value;
 }
 
+async function findContentBox(buf: Buffer) {
+  const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
+  const { width, height, channels } = info;
+  const bg = [data[0], data[1], data[2]];
+
+  function rowHasContent(y: number): boolean {
+    let count = 0;
+    const step = 2;
+    const total = Math.ceil(width / step);
+    for (let x = 0; x < width; x += step) {
+      const idx = (y * width + x) * channels;
+      const dr = data[idx] - bg[0],
+        dg = data[idx + 1] - bg[1],
+        db = data[idx + 2] - bg[2];
+      if (Math.sqrt(dr * dr + dg * dg + db * db) > PIXEL_THRESHOLD) count++;
+    }
+    return count / total > COUNT_FRACTION;
+  }
+
+  function colHasContent(x: number): boolean {
+    let count = 0;
+    const step = 2;
+    const total = Math.ceil(height / step);
+    for (let y = 0; y < height; y += step) {
+      const idx = (y * width + x) * channels;
+      const dr = data[idx] - bg[0],
+        dg = data[idx + 1] - bg[1],
+        db = data[idx + 2] - bg[2];
+      if (Math.sqrt(dr * dr + dg * dg + db * db) > PIXEL_THRESHOLD) count++;
+    }
+    return count / total > COUNT_FRACTION;
+  }
+
+  let top = 0,
+    bottom = height - 1,
+    left = 0,
+    right = width - 1;
+  while (top < height && !rowHasContent(top)) top++;
+  while (bottom > top && !rowHasContent(bottom)) bottom--;
+  while (left < width && !colHasContent(left)) left++;
+  while (right > left && !colHasContent(right)) right--;
+
+  return { top, bottom, left, right, width, height };
+}
+
+async function smartCrop(original: Buffer): Promise<Buffer> {
+  const box = await findContentBox(original);
+  const boxW = box.right - box.left;
+  const boxH = box.bottom - box.top;
+  const areaRatio = (boxW * boxH) / (box.width * box.height);
+
+  let source = original;
+  if (areaRatio > MIN_TRIM_AREA_RATIO && areaRatio < MAX_TRIM_AREA_RATIO) {
+    const padTop = Math.round(box.height * PAD_TOP);
+    const padBottom = Math.round(box.height * PAD_BOTTOM);
+    const padSide = Math.round(box.width * PAD_SIDE);
+    const left = Math.max(0, box.left - padSide);
+    const top = Math.max(0, box.top - padTop);
+    const right = Math.min(box.width, box.right + padSide);
+    const bottom = Math.min(box.height, box.bottom + padBottom);
+    source = await sharp(original)
+      .extract({ left, top, width: right - left, height: bottom - top })
+      .toBuffer();
+  }
+
+  return sharp(source)
+    .resize(TARGET, TARGET, { fit: "cover", position: sharp.strategy.attention })
+    .webp({ quality: WEBP_QUALITY })
+    .toBuffer();
+}
+
 /**
- * Re-crops every menu item photo already in storage to its category's
- * own aspect ratio, in place (same storage path, same public URL, no
+ * Re-crops every menu item photo already in storage to a genuine
+ * 1200x1200 square, in place (same storage path, same public URL, no
  * menu_items.image_url update needed).
  *
- * Started as a single universal 1200x1200 square for every item. Real
- * measurement of the source photos showed that was fighting the
- * photography rather than matching it: sweet-classic's chimney rolls
- * are 1.25 wide-to-tall on every one of its 9 items, milkshakes' jars
- * are 0.91 on every one of its 7, pizza is 1.00 on all 11. Forcing all
- * of that into one square meant cropping into rolls on the sides, or
- * needing extra logic just to protect a product name baked into the
- * top of a drink photo. Per-category targets, still content-aware
- * within that shape (see below), fit the dominant photo shape in each
- * category directly instead.
+ * One universal square for every item, not a per-category shape: tried
+ * per-category aspect ratios and it made cards different sizes
+ * depending which category they were in, inconsistent rather than
+ * considered. Every card is the same size.
  *
- * sharp's attention strategy is content-aware (libvips saliency
- * detection), not a fixed anchor point, so within whatever shape a
- * category targets, individual items whose own photo doesn't match
- * that category's typical aspect (extras, smoothies, hot-coffee, and a
- * few others have real internal variance, see category-aspect.ts) still
- * get cropped around what's actually salient in that specific image.
+ * Two passes get applied within that one square. First, a custom
+ * content-box detection (not sharp's built-in trim, which requires
+ * every single pixel in a row to match the background and fails the
+ * moment there's a stray compression artefact or a thin sliver of
+ * product) finds and removes excess flat backdrop, generously padded
+ * (15% top, 8% bottom/sides) since irregular product edges (turkey
+ * curls, a whipped-cream peak) need real headroom, not a tight box.
+ * This is what fixes photos where the product sat as a thin strip in
+ * a mostly-empty square (several Savory sandwiches lost 40%+ of their
+ * frame height to flat pink backdrop above and below). Then sharp's
+ * attention strategy (libvips saliency detection, not a fixed anchor
+ * point) crops that trimmed region into the final square, so a photo
+ * that still doesn't match 1:1 after trimming still gets a
+ * content-aware crop rather than a blind centred one.
  *
- * Run again if new items get added, or if CATEGORY_ASPECT changes (keep
- * it in sync with lib/menu/category-aspect.ts by hand).
+ * Run again if new items get added with source photos this hasn't seen.
  */
 async function main() {
   const url = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
@@ -87,39 +149,28 @@ async function main() {
     throw new Error(`Failed to list menu items: ${error.message}`);
   }
 
-  // Group by (image_url, target aspect) rather than image_url alone:
-  // the same source photo is never shared across two different
-  // categories in this catalogue, but grouping this way is correct even
-  // if that ever changed, since two categories could want different
-  // crops of the same source image.
+  // Several items share one source photo (nine, per CLAUDE.md), no need
+  // to download and re-crop the same image more than once.
   type Row = (typeof items)[number];
-  const groups = new Map<string, { imageUrl: string; aspect: number; refs: Row[] }>();
-
+  const byUrl = new Map<string, Row[]>();
   for (const item of items) {
-    const slug = (item.categories as unknown as { slug: string } | null)?.slug ?? "";
-    const aspect = CATEGORY_ASPECT[slug] ?? DEFAULT_ASPECT;
-    const key = `${item.image_url}::${aspect}`;
-    const group = groups.get(key) ?? { imageUrl: item.image_url!, aspect, refs: [] as Row[] };
-    group.refs.push(item);
-    groups.set(key, group);
+    const list = byUrl.get(item.image_url!) ?? [];
+    list.push(item);
+    byUrl.set(item.image_url!, list);
   }
 
-  console.log(`${items.length} items, ${groups.size} unique (image, aspect) groups.`);
+  console.log(`${items.length} items, ${byUrl.size} unique source images.`);
 
   let uploaded = 0;
   const failures: { name: string; error: string }[] = [];
 
-  for (const { imageUrl, aspect, refs } of groups.values()) {
+  for (const [imageUrl, refs] of byUrl) {
     try {
       const res = await fetch(imageUrl);
       if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status}`);
       const original = Buffer.from(await res.arrayBuffer());
 
-      const { width, height } = targetDimensions(aspect);
-      const cropped = await sharp(original)
-        .resize(width, height, { fit: "cover", position: sharp.strategy.attention })
-        .webp({ quality: WEBP_QUALITY })
-        .toBuffer();
+      const cropped = await smartCrop(original);
 
       for (const ref of refs) {
         const marker = `/object/public/${BUCKET}/`;

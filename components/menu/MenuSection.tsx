@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Menu } from "@/lib/menu/types";
 import { filterMenu } from "@/lib/menu/search";
-import { categoryAspect } from "@/lib/menu/category-aspect";
 import { useScrollSpy } from "@/lib/menu/use-scroll-spy";
 import { SearchBar } from "@/components/menu/SearchBar";
 import { CategoryRail } from "@/components/menu/CategoryRail";
@@ -85,7 +84,7 @@ export function MenuSection({ menu }: MenuSectionProps) {
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
             {category.menu_items.map((item) => (
-              <MenuItemCard key={item.id} item={item} imageAspect={categoryAspect(category.slug)} />
+              <MenuItemCard key={item.id} item={item} />
             ))}
           </div>
         </section>

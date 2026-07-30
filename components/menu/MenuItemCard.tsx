@@ -9,7 +9,6 @@ import { formatPrice } from "@/lib/menu/format";
 
 type MenuItemCardProps = {
   item: MenuItemRow;
-  imageAspect: number;
 };
 
 /**
@@ -41,7 +40,7 @@ type MenuItemCardProps = {
  * the glow itself becomes a small signal of "in stock", not just
  * decoration sitting under every card regardless of state.
  */
-export const MenuItemCard = memo(function MenuItemCard({ item, imageAspect }: MenuItemCardProps) {
+export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardProps) {
   const hasSizes = item.item_sizes.length > 0;
   const displayPrice = hasSizes
     ? Math.min(...item.item_sizes.map((s) => s.price))
@@ -63,29 +62,18 @@ export const MenuItemCard = memo(function MenuItemCard({ item, imageAspect }: Me
         className="flex flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-(--accent-ring) focus-visible:outline-offset-[-2px]"
       >
         {/*
-          imageAspect is per-category, not one universal square (see
-          lib/menu/category-aspect.ts): measured the real source photos,
-          sweet-classic's rolls are 1.25 wide-to-tall on every single
-          item, milkshakes' jars are 0.91 on every single item, pizza is
-          1.00 on every item. A universal square meant fighting the
-          source photography for the categories that clustered tightly
-          around a non-square shape. Consistent within a category (every
-          card in one grid section shares it, rows stay aligned), matched
-          to the category rather than fixed globally.
-
-          Plain object-cover, no position override needed on top of that:
-          every source image in storage is pre-cropped to this same
-          target shape already (see scripts/recrop-images.ts), using
+          One universal square for every card, not per-category: tried
+          per-category shapes (landscape for the rolls, portrait for the
+          drink jars) and it made cards different sizes across
+          categories, which read as inconsistent rather than considered.
+          Every source image in storage is pre-cropped to this same
+          1200x1200 square already (see scripts/recrop-images.ts), using
           sharp's attention strategy (content-aware saliency detection,
-          not a fixed anchor point), so a baked-in product name at the
-          top of a drink photo still keeps its own important content even
-          on the items within a category that don't match its typical
-          aspect.
+          not a fixed anchor point), so plain object-cover here doesn't
+          need a position override, the crop already happened at the
+          source.
         */}
-        <div
-          className="relative w-full bg-(--bg-unavailable)"
-          style={{ aspectRatio: imageAspect }}
-        >
+        <div className="relative aspect-square w-full bg-(--bg-unavailable)">
           {item.image_url ? (
             <Image
               src={item.image_url}
