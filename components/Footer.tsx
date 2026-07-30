@@ -1,11 +1,9 @@
-import {
-  FacebookLogo,
-  InstagramLogo,
-  MapPin,
-  Phone,
-  TiktokLogo,
-  WhatsappLogo,
-} from "@phosphor-icons/react/ssr";
+import { FacebookLogo } from "@phosphor-icons/react/dist/ssr/FacebookLogo";
+import { InstagramLogo } from "@phosphor-icons/react/dist/ssr/InstagramLogo";
+import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin";
+import { Phone } from "@phosphor-icons/react/dist/ssr/Phone";
+import { TiktokLogo } from "@phosphor-icons/react/dist/ssr/TiktokLogo";
+import { WhatsappLogo } from "@phosphor-icons/react/dist/ssr/WhatsappLogo";
 
 const WHATSAPP_GREETING = "Hi Valhalla, I'd like to place an order.";
 const WHATSAPP_URL = `https://wa.me/201000100115?text=${encodeURIComponent(WHATSAPP_GREETING)}`;

@@ -1,4 +1,4 @@
-import { SmileySad } from "@phosphor-icons/react/dist/ssr";
+import { SmileySad } from "@phosphor-icons/react/dist/ssr/SmileySad";
 
 type EmptySearchStateProps = {
   query: string;

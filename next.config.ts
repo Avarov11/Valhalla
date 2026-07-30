@@ -5,6 +5,16 @@ const supabaseHostname = new URL(
 ).hostname;
 
 const nextConfig: NextConfig = {
+  // @phosphor-icons/react ships ~3000 individual icon files behind one
+  // barrel export. Dev-mode webpack doesn't tree-shake the way a
+  // production build does, so a plain `import { X } from
+  // "@phosphor-icons/react"` was pulling the whole package into the
+  // compile graph (14k+ modules for what uses maybe 15 icons total).
+  // This rewrites those imports to their specific submodule at compile
+  // time instead.
+  experimental: {
+    optimizePackageImports: ["@phosphor-icons/react"],
+  },
   images: {
     remotePatterns: [
       {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { getMenu } from "@/lib/menu/get-menu";
 import { findItemById } from "@/lib/menu/find-item";
 import { ThemeToggle } from "@/components/ThemeToggle";
