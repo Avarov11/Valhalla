@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { ListMagnifyingGlass, MagnifyingGlass, ShoppingCart } from "@phosphor-icons/react";
 
 type BottomBarProps = {
@@ -57,7 +57,7 @@ export function BottomBar({ itemCount, onMenu, onSearch, onCart }: BottomBarProp
           <span className="relative">
             <ShoppingCart size={22} />
             {itemCount > 0 ? (
-              <motion.span
+              <m.span
                 key={itemCount}
                 initial={{ scale: 1.35 }}
                 animate={{ scale: 1 }}
@@ -65,7 +65,7 @@ export function BottomBar({ itemCount, onMenu, onSearch, onCart }: BottomBarProp
                 className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-(--radius-pill) bg-(--accent-solid) px-1 text-[10px] font-semibold text-(--text-on-accent)"
               >
                 {itemCount > 99 ? "99+" : itemCount}
-              </motion.span>
+              </m.span>
             ) : null}
           </span>
           <span aria-hidden="true" className="text-(length:--text-xs) font-medium">

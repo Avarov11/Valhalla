@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { X } from "@phosphor-icons/react";
 import type { MenuItemRow } from "@/lib/menu/types";
 import { ItemDetailContent } from "@/components/menu/ItemDetailContent";
@@ -14,6 +14,20 @@ import { ItemDetailContent } from "@/components/menu/ItemDetailContent";
  * passed-in callback, since the "open" state IS the URL now, there's
  * nothing else to reset. Same bottom-sheet-below-lg / floating-panel-at-lg
  * split as the cart drawer, for the same reachability reasons.
+ *
+ * Three responsive tiers, not two: below md it's a full-bleed bottom sheet
+ * (right for a one-handed phone reach). At md (768, tablet portrait) it
+ * stays a bottom sheet but gets capped to max-w-xl and centered, matching
+ * the standalone /item/[id] page's own width, instead of stretching the
+ * sheet edge-to-edge across a tablet-width viewport, which read as a
+ * stretched phone layout, not a designed tablet one. At lg it becomes a
+ * centered floating panel via `inset-0 m-auto`, not `left-1/2 top-1/2`
+ * plus `-translate-x/y-1/2`: Motion owns this element's `transform` for
+ * the slide-up entrance (`animate={{ y: 0 }}` sets an inline transform
+ * every render), which silently overwrites any translate-based centering
+ * from a class, since inline styles always win over stylesheet rules.
+ * `inset-0` + `margin: auto` centers without touching `transform` at all,
+ * so it composes with Motion's own transform instead of losing to it.
  */
 export function ItemModal({ item }: { item: MenuItemRow }) {
   const router = useRouter();
@@ -33,18 +47,18 @@ export function ItemModal({ item }: { item: MenuItemRow }) {
 
   return (
     <>
-      <motion.div
+      <m.div
         className="fixed inset-0 z-(--z-modal) bg-black/40"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2 }}
         onClick={close}
       />
-      <motion.div
+      <m.div
         role="dialog"
         aria-modal="true"
         aria-label={item.name_en}
-        className="fixed inset-x-0 bottom-0 z-(--z-modal) flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-(--radius-lg) bg-(--bg-page) shadow-(--shadow-lg) lg:inset-x-auto lg:inset-y-0 lg:left-1/2 lg:right-auto lg:top-1/2 lg:bottom-auto lg:max-h-[85dvh] lg:w-full lg:max-w-lg lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-(--radius-lg)"
+        className="fixed inset-x-0 bottom-0 z-(--z-modal) flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-(--radius-lg) bg-(--bg-page) shadow-(--shadow-lg) md:max-w-xl md:mx-auto lg:inset-0 lg:m-auto lg:h-fit lg:max-h-[85dvh] lg:w-full lg:max-w-lg lg:rounded-(--radius-lg)"
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -66,7 +80,7 @@ export function ItemModal({ item }: { item: MenuItemRow }) {
             }
           />
         </div>
-      </motion.div>
+      </m.div>
     </>
   );
 }

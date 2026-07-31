@@ -28,7 +28,8 @@ function formatMoney(amount: number): string {
 
 function formatLine(line: ResolvedCartLine): string {
   const sizePart = line.sizeLabel ? ` (${line.sizeLabel})` : "";
-  return `${line.quantity}x ${line.name}${sizePart} - ${formatMoney(line.lineTotal)}`;
+  const addonsPart = line.addons.length > 0 ? ` + ${line.addons.map((a) => a.name).join(", ")}` : "";
+  return `${line.quantity}x ${line.name}${sizePart}${addonsPart} - ${formatMoney(line.lineTotal)}`;
 }
 
 function assembleMessage(itemLines: string[], omittedCount: number, grandTotal: number): string {

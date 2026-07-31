@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { getMenu } from "@/lib/menu/get-menu";
-import { findItemById } from "@/lib/menu/find-item";
+import { getMenuItemById } from "@/lib/menu/get-menu";
 import { ItemModal } from "@/components/menu/ItemModal";
 
 export const revalidate = 60;
@@ -11,8 +10,7 @@ export default async function InterceptedItemModal({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const menu = await getMenu();
-  const item = findItemById(menu, id);
+  const item = await getMenuItemById(id);
 
   if (!item) notFound();
 

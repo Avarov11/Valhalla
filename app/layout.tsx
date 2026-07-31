@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Public_Sans, Cairo } from "next/font/google";
-import { MotionConfig } from "motion/react";
+import { Bricolage_Grotesque, Public_Sans, Cairo, Kaushan_Script } from "next/font/google";
+import { LazyMotion, domMax, MotionConfig } from "motion/react";
 import { getMenu } from "@/lib/menu/get-menu";
 import { CartProvider } from "@/lib/cart/cart-context";
 import "./globals.css";
@@ -23,6 +23,18 @@ const cairo = Cairo({
   display: "swap",
 });
 
+// Hero headline only, per val.png (closest Google Fonts match to that
+// bold brush-script logo mark, eyeballed, not extracted from the image).
+// REDESIGN.md bans script/handwritten display type everywhere else on
+// the page, this is a deliberate, scoped exception, not a reversal of
+// that rule, see Hero.tsx.
+const kaushanScript = Kaushan_Script({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-kaushan-script",
+  display: "swap",
+});
+
 export const revalidate = 60;
 
 export const metadata: Metadata = {
@@ -38,6 +50,16 @@ export const metadata: Metadata = {
  * (app/item/[id], intercepted from within the app via app/@modal), which
  * put "add to cart" in a subtree that shares no client ancestor with the
  * main page's grid unless the provider sits up here, at the root.
+ *
+ * LazyMotion wraps the whole tree so every component below imports the
+ * lightweight `m` component instead of the full `motion` component,
+ * which bundles every animation feature unconditionally. `domMax`, not
+ * the smaller `domAnimation`, because CategoryRail and CategorySidebar's
+ * sliding active-pill indicator uses `layoutId`, and layout animations
+ * are only in the max feature set, not the animation-only one. `strict`
+ * throws if any component under this tree still imports `motion`
+ * instead of `m`, catching a missed conversion instead of silently
+ * losing the size win.
  */
 export default async function RootLayout({
   children,
@@ -51,7 +73,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${publicSans.variable} ${cairo.variable}`}
+      className={`${bricolage.variable} ${publicSans.variable} ${cairo.variable} ${kaushanScript.variable}`}
       // The inline script below sets data-theme on this element directly,
       // before hydration, to avoid a flash of the wrong theme. The server
       // never renders that attribute (it has no access to localStorage),
@@ -69,12 +91,14 @@ export default async function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('valhalla-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
           }}
         />
-        <MotionConfig reducedMotion="user">
-          <CartProvider menu={menu}>
-            {children}
-            {modal}
-          </CartProvider>
-        </MotionConfig>
+        <LazyMotion features={domMax} strict>
+          <MotionConfig reducedMotion="user">
+            <CartProvider menu={menu}>
+              {children}
+              {modal}
+            </CartProvider>
+          </MotionConfig>
+        </LazyMotion>
       </body>
     </html>
   );

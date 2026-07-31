@@ -1,6 +1,8 @@
 "use client";
 
-import { motion } from "motion/react";
+import Image from "next/image";
+import { m } from "motion/react";
+import valMark from "@/val.png";
 
 const WHATSAPP_GREETING = "Hi Valhalla, I'd like to place an order.";
 const WHATSAPP_URL = `https://wa.me/201000100115?text=${encodeURIComponent(WHATSAPP_GREETING)}`;
@@ -26,18 +28,41 @@ function scrollToMenu() {
  * CTAs land inside the first viewport at 390 and at 1024 regardless of
  * exact device height, rather than being pushed down by an artificially
  * tall, vertically-centred section.
+ *
+ * EXPERIMENT (2026-07-31): the background wordmark is val.png itself
+ * (a raster PNG) rather than live "VALHALLA" text, replacing the
+ * Kaushan Script attempt from earlier the same day. Two real costs
+ * versus live text, being tried anyway on request: val.png is a 902px
+ * source scaled to roughly viewport width here, some softening at
+ * large sizes is expected, not a bug. And it can't hue-match
+ * --border-default's exact pale tan the way text could; --logo-invert
+ * (globals.css) flips it black/white per theme same as the header
+ * logo, then opacity stands in for "low contrast" instead of a themed
+ * colour.
+ *
+ * One size/position for every breakpoint (w-[100vw], -right-[2vw],
+ * -top-[3vw]), no lg override, matching exactly how the live-text
+ * version behaved before this swap (text-[22vw], -right-[0.06em],
+ * -top-[0.1em], no lg variant either). Three earlier attempts at a
+ * separate lg treatment (capped+cornered, dead-centred, small+offset)
+ * all got overridden by request in favour of this, going back to the
+ * original's own uncapped, single-rule approach, just with the image
+ * standing in for the text. If a genuinely wide desktop makes it read
+ * as too dominant again, that was already true of the original text at
+ * the same width, it's not a regression this swap introduced.
  */
 export function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-(--border-default) bg-(--bg-page)">
-      <span
+      <Image
+        src={valMark}
+        alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute -right-[0.06em] -top-[0.1em] select-none whitespace-nowrap font-(family-name:--font-display) text-[22vw] font-bold leading-none tracking-(--tracking-tighter) text-(--border-default)"
-      >
-        VALHALLA
-      </span>
+        priority
+        className="pointer-events-none absolute -right-[2vw] -top-[3vw] w-[100vw] max-w-none select-none opacity-[0.16] [filter:var(--logo-invert)]"
+      />
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -69,7 +94,7 @@ export function Hero() {
             Order on WhatsApp
           </a>
         </div>
-      </motion.div>
+      </m.div>
     </section>
   );
 }

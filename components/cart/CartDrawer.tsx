@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Minus, Plus, WarningCircle, X } from "@phosphor-icons/react";
 import type { ResolvedCartLine, RemovedNotice } from "@/lib/cart/types";
 import { formatPrice } from "@/lib/menu/format";
@@ -13,8 +13,8 @@ type CartDrawerProps = {
   lines: ResolvedCartLine[];
   removedNotices: RemovedNotice[];
   onDismissNotices: () => void;
-  onUpdateQuantity: (itemId: string, sizeLabel: string | null, quantity: number) => void;
-  onRemove: (itemId: string, sizeLabel: string | null) => void;
+  onUpdateQuantity: (itemId: string, sizeLabel: string | null, addonOptionIds: string[], quantity: number) => void;
+  onRemove: (itemId: string, sizeLabel: string | null, addonOptionIds: string[]) => void;
   grandTotal: number;
   whatsappUrl: string;
   whatsappTruncated: boolean;
@@ -28,6 +28,8 @@ function removalReason(notice: RemovedNotice): string {
       return "it is no longer on the menu";
     case "size-changed":
       return "that option is no longer available";
+    case "addon-changed":
+      return "one of its extras is no longer available";
   }
 }
 
@@ -40,6 +42,14 @@ function removalReason(notice: RemovedNotice): string {
  * full height, for the same reason. The two need different Motion
  * entrance axes (up for a sheet, in-from-the-right for a corner panel),
  * which can only be chosen in JS, not via responsive classes alone.
+ *
+ * At md (768, tablet portrait) the sheet stays bottom-anchored but gets
+ * capped to max-w-xl and centered (`mx-auto`), rather than stretching
+ * edge-to-edge across a tablet-width viewport like a stretched phone
+ * sheet. Plain margin auto, not a translate, is deliberate here too, see
+ * ItemModal.tsx for why that matters once Motion is animating the same
+ * element (this panel's lg+ position doesn't use translate, so it isn't
+ * at risk the same way, but the pattern stays consistent either way).
  */
 function useIsDesktopCart() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -84,7 +94,7 @@ export function CartDrawer({
     <AnimatePresence>
       {open ? (
         <>
-          <motion.div
+          <m.div
             key="cart-overlay"
             className="fixed inset-0 z-(--z-cart-sheet) bg-black/40"
             initial={{ opacity: 0 }}
@@ -93,12 +103,12 @@ export function CartDrawer({
             transition={{ duration: 0.2 }}
             onClick={onClose}
           />
-          <motion.div
+          <m.div
             key="cart-panel"
             role="dialog"
             aria-modal="true"
             aria-label="Cart"
-            className="fixed inset-x-0 bottom-0 z-(--z-cart-sheet) flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-(--radius-lg) bg-(--bg-page) shadow-(--shadow-lg) lg:inset-x-auto lg:left-auto lg:right-6 lg:top-6 lg:bottom-auto lg:max-h-[calc(100dvh-3rem)] lg:w-full lg:max-w-md lg:rounded-(--radius-lg)"
+            className="fixed inset-x-0 bottom-0 z-(--z-cart-sheet) flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-(--radius-lg) bg-(--bg-page) shadow-(--shadow-lg) md:max-w-xl md:mx-auto lg:inset-x-auto lg:mx-0 lg:left-auto lg:right-6 lg:top-6 lg:bottom-auto lg:max-h-[calc(100dvh-3rem)] lg:w-full lg:max-w-md lg:rounded-(--radius-lg)"
             initial={isDesktop ? { x: "100%" } : { y: "100%" }}
             animate={isDesktop ? { x: 0 } : { y: 0 }}
             exit={isDesktop ? { x: "100%" } : { y: "100%" }}
@@ -152,7 +162,10 @@ export function CartDrawer({
               ) : (
                 <ul className="flex flex-col gap-4">
                   {lines.map((line) => (
-                    <li key={`${line.itemId}-${line.sizeLabel ?? "flat"}`} className="flex gap-3">
+                    <li
+                      key={`${line.itemId}-${line.sizeLabel ?? "flat"}-${line.addonOptionIds.join(",")}`}
+                      className="flex gap-3"
+                    >
                       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-(--radius-md) bg-(--bg-unavailable)">
                         {line.imageUrl ? (
                           <Image
@@ -170,13 +183,20 @@ export function CartDrawer({
                           {line.name}
                           {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
                         </p>
+                        {line.addons.length > 0 ? (
+                          <p className="text-(length:--text-xs) text-(--text-secondary)">
+                            + {line.addons.map((a) => a.name).join(", ")}
+                          </p>
+                        ) : null}
                         <p className="text-(length:--text-xs) text-(--text-muted)">
                           {formatPrice(line.unitPrice)} each
                         </p>
                         <div className="mt-2 flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => onUpdateQuantity(line.itemId, line.sizeLabel, line.quantity - 1)}
+                            onClick={() =>
+                              onUpdateQuantity(line.itemId, line.sizeLabel, line.addonOptionIds, line.quantity - 1)
+                            }
                             aria-label={`Decrease quantity of ${line.name}`}
                             className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-[0.92]"
                           >
@@ -187,7 +207,9 @@ export function CartDrawer({
                           </span>
                           <button
                             type="button"
-                            onClick={() => onUpdateQuantity(line.itemId, line.sizeLabel, line.quantity + 1)}
+                            onClick={() =>
+                              onUpdateQuantity(line.itemId, line.sizeLabel, line.addonOptionIds, line.quantity + 1)
+                            }
                             aria-label={`Increase quantity of ${line.name}`}
                             className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-[0.92]"
                           >
@@ -201,9 +223,9 @@ export function CartDrawer({
                         </span>
                         <button
                           type="button"
-                          onClick={() => onRemove(line.itemId, line.sizeLabel)}
+                          onClick={() => onRemove(line.itemId, line.sizeLabel, line.addonOptionIds)}
                           aria-label={`Remove ${line.name} from cart`}
-                          className="text-(length:--text-xs) text-(--text-muted) underline active:opacity-60"
+                          className="flex min-h-11 items-center text-(length:--text-xs) text-(--text-muted) underline active:opacity-60"
                         >
                           Remove
                         </button>
@@ -248,7 +270,7 @@ export function CartDrawer({
                 Order on WhatsApp
               </a>
             </div>
-          </motion.div>
+          </m.div>
         </>
       ) : null}
     </AnimatePresence>

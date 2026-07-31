@@ -1,9 +1,11 @@
+import Image from "next/image";
 import { FacebookLogo } from "@phosphor-icons/react/dist/ssr/FacebookLogo";
 import { InstagramLogo } from "@phosphor-icons/react/dist/ssr/InstagramLogo";
 import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin";
 import { Phone } from "@phosphor-icons/react/dist/ssr/Phone";
 import { TiktokLogo } from "@phosphor-icons/react/dist/ssr/TiktokLogo";
 import { WhatsappLogo } from "@phosphor-icons/react/dist/ssr/WhatsappLogo";
+import valMark from "@/val.png";
 
 const WHATSAPP_GREETING = "Hi Valhalla, I'd like to place an order.";
 const WHATSAPP_URL = `https://wa.me/201000100115?text=${encodeURIComponent(WHATSAPP_GREETING)}`;
@@ -35,16 +37,45 @@ const socials = [
  * panel pulled up over the content column via negative margin carry over
  * from the previous pass, both still fit the brief's "not centred" and
  * "overlap, not two clean rectangles" instincts.
+ *
+ * Both real-content blocks need `relative z-10` against the wordmark,
+ * not just the first one (2026-07-31 fix): the wordmark is
+ * `position: absolute` with no explicit z-index, and per CSS stacking
+ * rules a positioned element at z-index:auto paints above unpositioned,
+ * static in-flow content regardless of DOM order. The tagline block had
+ * z-10 already; the contact/icons/map block didn't, so the wordmark was
+ * rendering in front of it, muddying the social icons and tax note
+ * against the giant letters behind them. The icon buttons additionally
+ * get a solid `bg-(--bg-page)` fill, their border colour is the same
+ * token as the wordmark's, so even correctly stacked on top, a
+ * transparent circle would still show wordmark strokes bleeding through
+ * its interior.
+ *
+ * EXPERIMENT (2026-07-31): wordmark is val.png (raster) instead of live
+ * text, matching the same change in Hero.tsx, for the same reason: kept
+ * consistent between the two bookends rather than leaving one on the
+ * image and one on text. Same caveats as Hero.tsx: upscale softening
+ * expected, --logo-invert plus opacity stands in for the themed
+ * --border-default colour a text element could carry directly.
+ *
+ * Position (-bottom-[3vw] -left-[2vw]) is one rule for every
+ * breakpoint, only width changes at lg (w-[130vw] lg:w-[76vw]),
+ * matching exactly how the live-text version was built
+ * (text-[34vw] lg:text-[20vw], same 1.7x ratio, same anchor point at
+ * every size, per request after separate lg positioning attempts kept
+ * missing). If this reads as too dominant on a very wide desktop, the
+ * original text at that same width had the identical uncapped
+ * scaling, this isn't a new problem the image introduced.
  */
 export function Footer() {
   return (
     <footer className="relative overflow-hidden border-t border-(--border-default) bg-(--bg-page)">
-      <span
+      <Image
+        src={valMark}
+        alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-[0.22em] -left-[0.1em] select-none font-(family-name:--font-display) text-[34vw] font-bold leading-none tracking-(--tracking-tighter) text-(--border-default) lg:text-[20vw]"
-      >
-        VALHALLA
-      </span>
+        className="pointer-events-none absolute -bottom-[3vw] -left-[2vw] w-[130vw] max-w-none select-none opacity-[0.16] [filter:var(--logo-invert)] lg:w-[76vw]"
+      />
 
       <div className="relative z-10 mx-auto max-w-(--page-max-width) px-4 pt-12 lg:px-10 lg:pt-16">
         <p className="font-(family-name:--font-display) text-(length:--text-display-sm) leading-(--leading-tight) tracking-(--tracking-tight) text-(--text-primary)">
@@ -52,7 +83,7 @@ export function Footer() {
         </p>
       </div>
 
-      <div className="mx-auto grid max-w-(--page-max-width) gap-10 px-4 pb-12 pt-8 lg:grid-cols-[3fr_2fr] lg:px-10 lg:pb-16 lg:pt-10">
+      <div className="relative z-10 mx-auto grid max-w-(--page-max-width) gap-10 px-4 pb-12 pt-8 lg:grid-cols-[3fr_2fr] lg:px-10 lg:pb-16 lg:pt-10">
         <div className="flex flex-col gap-4 lg:pr-10">
           <div className="flex flex-col gap-2">
             <a
@@ -81,7 +112,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={name}
-                className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
+                className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) bg-(--bg-page) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
               >
                 <Icon size={18} />
               </a>

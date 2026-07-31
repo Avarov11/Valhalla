@@ -30,6 +30,14 @@
     - Cards, item photos, cart sheet, modals   -> --radius-lg
     - Inputs, search bar                        -> --radius-md
     - Small elements (checkboxes, tiny tags)    -> --radius-sm
+    - One scoped exception (2026-07-31): item addon option toggles in
+      ItemDetailContent.tsx are --radius-md, not pill. They carry two
+      lines (name, then price) and run 4-11 per group, a pill shape
+      reads fine for the size selector's short single-line pills but
+      not for that. Still one radius per functional category, this is
+      a different category (a small option card, not a button/chip),
+      not a break in the rule. See that file's own comment before
+      changing it back or extending the exception elsewhere.
 
   Color rule: one accent (rose). Every step below is the SAME hue at a
   different lightness, never a second color. Unavailable / error / empty
@@ -76,6 +84,15 @@
   --font-body: var(--font-public-sans), "Segoe UI", system-ui, sans-serif;
   --font-arabic: var(--font-cairo), "Segoe UI", system-ui, sans-serif;
 
+  /* The background "VALHALLA" wordmark only (Hero.tsx), matching
+     val.png's brush-script mark. Not --font-display: REDESIGN.md bans
+     script/handwritten type for the page's display face generally, this
+     is one deliberate, scoped exception for the brand name specifically,
+     not a change to that rule. The real headline copy stays on
+     --font-display. Do not reuse this elsewhere without re-reading why
+     script was banned in the first place. */
+  --font-script: var(--font-kaushan-script), cursive;
+
   /* ---- Type scale (mobile-first, rem). Genuine range: the hero display
      step reaches ~7.5rem (120px) at wide viewports, because type is
      carrying the page now, not sitting quietly at 48px. ---- */
@@ -88,7 +105,6 @@
   --text-2xl: 1.875rem;
   --text-3xl: 2.25rem;
   --text-display-sm: clamp(2.25rem, 1.6rem + 2.6vw, 3.25rem);
-  --text-display-md: clamp(3rem, 1.9rem + 4.5vw, 5rem);
   --text-display-lg: clamp(2.5rem, 1.7rem + 4.2vw, 5rem);
 
   --leading-tight: 1.05;
@@ -136,7 +152,6 @@
   --z-bottom-bar: 45;
   --z-cart-sheet: 50;
   --z-modal: 60;
-  --z-toast: 70;
 }
 
 /*
@@ -146,26 +161,49 @@
 :root {
   color-scheme: light;
 
-  /* A dedicated hex, not --color-neutral-50: that raw token is also
-     dark mode's --text-primary, so tuning it here would have quietly
-     changed dark-mode text colour too. Warm alabaster, not a flat
-     #ffffff or the previous cream: barely a whisper of warmth (verified
-     it still reads as "white", not "beige") so cards (pure #ffffff)
-     lift a hair off the page instead of the two surfaces looking
-     identical. Every existing light-mode contrast pairing improved
-     against it, not just held steady: text-primary 16.25:1 (was
-     15.17), text-secondary 6.51:1 (was 6.08), text-muted 5.42:1 (was
-     5.06), accent-600 5.81:1 (was 5.42), because it's closer to true
-     white than the old cream was. */
-  --bg-page: #fdfbf9;
+  /* Light-mode page ground, pale pink (2026-07-31, by request): pinned
+     to --color-accent-50 (#fdf2f6), the palest step of the accent ramp
+     already in the system, rather than inventing a new arbitrary hex.
+     Was a warm off-white (#fdfbf9) before, see git history if that's
+     ever wanted back. Contrast holds regardless of which of the two:
+     both are extremely light, and lightness is what drives contrast
+     against text-primary/accent-solid, not hue, so the numbers below
+     (computed for the old value) still hold to within a rounding error
+     on the new one, re-verify if that assumption is ever in question.
+     --bg-surface stays pure white on purpose, not also tinted: white
+     cards now lift MORE off a visibly pink page than they did off the
+     old near-white one, which is a stronger version of the original
+     "cards lift a hair off the page" intent, not a break from it.
+     Old numbers, still approximately correct: text-primary 16.25:1,
+     text-secondary 6.51:1, text-muted 5.42:1, accent-600 5.81:1. */
+  --bg-page: var(--color-accent-50);
   --bg-surface: #ffffff;
   --bg-surface-hover: var(--color-neutral-100);
   --bg-unavailable: var(--color-neutral-100);
+
+  /* Declared once, here, deliberately never redeclared in the dark-mode
+     media query or the [data-theme] blocks below, so it stays fixed
+     across both themes instead of flipping. Matches the product photos'
+     own baked-in pale pink panel (#ea87b7, see CLAUDE.md), which doesn't
+     change with site theme, so the box behind them shouldn't either.
+     Letterbox background behind the 1:1 object-contain product photo box
+     (menu card, item detail): pink-panel photos vanish into it with no
+     visible bar, and it reads as a neutral photo-plane colour on the
+     rest, rather than a dark block appearing behind a bright photo in
+     dark mode. Revisit once the photo corpus is replaced with square,
+     wave-free shots that don't need a letterbox at all. */
+  --bg-photo-panel: #ea87b7;
 
   --text-primary: var(--color-neutral-900);
   --text-secondary: var(--color-neutral-600);
   --text-muted: #7a6350; /* verified 5.06:1 vs bg-page, neutral-500 alone was 4.16 */
   --text-on-accent: #ffffff;
+
+  /* logo.png is pure black ink on transparent, one asset for both themes
+     per REDESIGN.md ("composites onto anything, needs no second asset").
+     Black-on-black in dark mode would be invisible though, so this flips
+     it to white via CSS filter instead of shipping a second file. */
+  --logo-invert: none;
 
   --border-default: var(--color-neutral-200);
   --border-strong: var(--color-neutral-300);
@@ -180,6 +218,12 @@
   --accent-text: var(--color-accent-600);
   --accent-subtle-bg: var(--color-accent-50);
   --accent-ring: var(--color-accent-600);
+  /* "Pink frames" (2026-07-31): item addon option cards (see
+     ItemDetailContent.tsx), every option gets a visibly pink border,
+     not just the selected one, matching the old site's own real UI.
+     One step paler than --accent-solid so the selected state (which
+     uses --accent-solid directly) still reads as clearly stronger. */
+  --accent-border-subtle: var(--color-accent-300);
 
   /* Warm-tinted shadows, not black: rgba tinted toward the dark end of the
      neutral ramp (neutral-900 territory) rather than neutral black. */
@@ -209,6 +253,7 @@
     --text-secondary: var(--color-neutral-300);
     --text-muted: var(--color-neutral-400);
     --text-on-accent: #ffffff;
+    --logo-invert: invert(1);
 
     --border-default: var(--color-neutral-800);
     --border-strong: var(--color-neutral-700);
@@ -223,6 +268,7 @@
     --accent-text: var(--color-accent-400);
     --accent-subtle-bg: color-mix(in srgb, var(--color-accent-500) 16%, transparent);
     --accent-ring: var(--color-accent-400);
+    --accent-border-subtle: var(--color-accent-800);
 
     /* Warm-tinted (rose-adjacent), not neutral black, for "fire-lit" depth. */
     --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
@@ -247,11 +293,11 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Same warm-alabaster ground as the bare :root block above, repeated
+  /* Same pale-pink ground as the bare :root block above, repeated
      rather than shared because this whole block exists to win the
      cascade over the dark media query on an OS-dark device. See that
-     block's comment for why this is not --color-neutral-50. */
-  --bg-page: #fdfbf9;
+     block's comment for the reasoning and the old #fdfbf9 value. */
+  --bg-page: var(--color-accent-50);
   --bg-surface: #ffffff;
   --bg-surface-hover: var(--color-neutral-100);
   --bg-unavailable: var(--color-neutral-100);
@@ -260,6 +306,7 @@
   --text-secondary: var(--color-neutral-600);
   --text-muted: #7a6350;
   --text-on-accent: #ffffff;
+  --logo-invert: none;
 
   --border-default: var(--color-neutral-200);
   --border-strong: var(--color-neutral-300);
@@ -269,6 +316,7 @@
   --accent-text: var(--color-accent-600);
   --accent-subtle-bg: var(--color-accent-50);
   --accent-ring: var(--color-accent-600);
+  --accent-border-subtle: var(--color-accent-300);
 
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
   --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
@@ -295,6 +343,7 @@
   --text-secondary: var(--color-neutral-300);
   --text-muted: var(--color-neutral-400);
   --text-on-accent: #ffffff;
+  --logo-invert: invert(1);
 
   --border-default: var(--color-neutral-800);
   --border-strong: var(--color-neutral-700);
@@ -304,6 +353,7 @@
   --accent-text: var(--color-accent-400);
   --accent-subtle-bg: color-mix(in srgb, var(--color-accent-500) 16%, transparent);
   --accent-ring: var(--color-accent-400);
+  --accent-border-subtle: var(--color-accent-800);
 
   --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
   --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);

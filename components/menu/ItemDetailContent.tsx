@@ -2,11 +2,33 @@
 
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { Minus, Plus } from "@phosphor-icons/react";
-import type { MenuItemRow } from "@/lib/menu/types";
+import type { AddonGroup, MenuItemRow } from "@/lib/menu/types";
 import { formatPrice } from "@/lib/menu/format";
 import { useCartContext } from "@/lib/cart/cart-context";
+
+/**
+ * Toggles one option into/out of the selected set. Groups with
+ * allows_multiple false (none on the old site today, but the schema
+ * supports it) behave like a radio group instead of checkboxes: picking
+ * an option in that group clears any other selection from the same
+ * group first, so at most one survives.
+ */
+function toggleAddon(current: Set<string>, group: AddonGroup, optionId: string): Set<string> {
+  const next = new Set(current);
+  if (next.has(optionId)) {
+    next.delete(optionId);
+    return next;
+  }
+  if (!group.allows_multiple) {
+    for (const option of group.item_addon_options) {
+      next.delete(option.id);
+    }
+  }
+  next.add(optionId);
+  return next;
+}
 
 /**
  * The actual detail UI, shared between the two routes that show it: the
@@ -14,8 +36,8 @@ import { useCartContext } from "@/lib/cart/cart-context";
  * be dropped into a WhatsApp conversation) and the intercepted modal
  * version rendered over the grid when navigated to from within the app
  * (app/@modal/(.)item/[id]). Both wrap this in their own chrome, this
- * component only owns image, name, description, size selection, quantity
- * and the add-to-cart action.
+ * component only owns image, name, description, size selection, addon
+ * selection, quantity and the add-to-cart action.
  */
 export function ItemDetailContent({
   item,
@@ -31,21 +53,29 @@ export function ItemDetailContent({
   const [selectedSize, setSelectedSize] = useState<string | null>(
     hasSizes ? item.item_sizes[0].label : null,
   );
+  const [selectedAddonIds, setSelectedAddonIds] = useState<Set<string>>(new Set());
   const [quantity, setQuantity] = useState(1);
 
   const isAvailable = item.is_available;
-  const unitPrice = hasSizes
+  const basePrice = hasSizes
     ? (item.item_sizes.find((s) => s.label === selectedSize)?.price ?? item.item_sizes[0].price)
     : (item.price ?? 0);
+  const addonTotal = item.item_addon_groups
+    .flatMap((group) => group.item_addon_options)
+    .filter((option) => selectedAddonIds.has(option.id))
+    .reduce((sum, option) => sum + option.price_delta, 0);
+  const unitPrice = basePrice + addonTotal;
 
   function handleAdd() {
-    cart.addItem(item.id, selectedSize, quantity);
+    cart.addItem(item.id, selectedSize, Array.from(selectedAddonIds), quantity);
     onAdded?.();
   }
 
   return (
     <div className="flex flex-col">
-      <div className="relative aspect-[4/3] w-full shrink-0 bg-(--bg-unavailable)">
+      {/* 1:1 box, object-contain not cover, --bg-photo-panel letterbox: see
+          MenuItemCard.tsx's card-geometry comment, same rule here. */}
+      <div className="relative aspect-square w-full shrink-0 bg-(--bg-photo-panel)">
         {item.image_url ? (
           <Image
             src={item.image_url}
@@ -53,7 +83,7 @@ export function ItemDetailContent({
             fill
             priority
             sizes="(max-width: 640px) 100vw, 32rem"
-            className={`object-cover ${isAvailable ? "" : "opacity-50"}`}
+            className={`object-contain ${isAvailable ? "" : "opacity-50"}`}
           />
         ) : null}
         {!isAvailable ? (
@@ -102,9 +132,71 @@ export function ItemDetailContent({
           </div>
         ) : (
           <p className="font-(family-name:--font-display) text-(length:--text-3xl) tracking-(--tracking-tight) text-(--accent-text)">
-            {formatPrice(unitPrice)}
+            {formatPrice(basePrice)}
           </p>
         )}
+
+        {/* Addon options are --radius-md cards, not --radius-pill: a
+            deliberate, scoped exception to the "interactive = pill,
+            always" rule (see globals.css and CLAUDE.md). A pill shape
+            reads fine for the size selector's short single-line "Label
+            · Price" pills, but addon groups run 4-11 longer-named
+            options each (see item_addons_schema.sql seed data), and a
+            wrapped row of variable-width single-line pills got messy
+            fast. Two-line name/price cards in a fixed 2-column grid,
+            matching the old site's own real UI for this exact control,
+            scans far better at that count. */}
+        {item.item_addon_groups.map((group) => (
+          <div key={group.id} className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-(length:--text-sm) font-medium text-(--text-primary)">
+                {group.name_en}
+              </span>
+              <span className="text-(length:--text-xs) text-(--text-muted)">
+                {group.is_required ? "Required" : "Optional"}
+              </span>
+            </div>
+            <div
+              role={group.allows_multiple ? "group" : "radiogroup"}
+              aria-label={group.name_en}
+              className="grid grid-cols-2 gap-2"
+            >
+              {group.item_addon_options.map((option) => {
+                const selected = selectedAddonIds.has(option.id);
+                const optionDisabled = !isAvailable || !option.is_available;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role={group.allows_multiple ? "checkbox" : "radio"}
+                    aria-checked={selected}
+                    disabled={optionDisabled}
+                    aria-disabled={optionDisabled}
+                    onClick={() =>
+                      setSelectedAddonIds((current) => toggleAddon(current, group, option.id))
+                    }
+                    className={`flex min-h-11 flex-col items-start justify-center gap-0.5 rounded-(--radius-md) border px-3 py-2 text-left transition duration-(--duration-fast) active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 ${
+                      selected
+                        ? "border-(--accent-solid) bg-(--accent-subtle-bg)"
+                        : "border-(--accent-border-subtle)"
+                    }`}
+                  >
+                    <span
+                      className={`text-(length:--text-sm) font-medium ${selected ? "text-(--accent-text)" : "text-(--text-primary)"}`}
+                    >
+                      {option.name_en}
+                    </span>
+                    <span
+                      className={`text-(length:--text-xs) ${selected ? "text-(--accent-text)" : "text-(--text-muted)"}`}
+                    >
+                      {option.is_available ? `+ ${formatPrice(option.price_delta)}` : "Sold out"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
 
         <div className="flex items-center gap-3">
           <span className="text-(length:--text-sm) text-(--text-secondary)">Quantity</span>
@@ -118,7 +210,7 @@ export function ItemDetailContent({
             >
               <Minus size={14} />
             </button>
-            <motion.span
+            <m.span
               key={quantity}
               initial={{ scale: 1.25 }}
               animate={{ scale: 1 }}
@@ -126,7 +218,7 @@ export function ItemDetailContent({
               className="w-6 text-center text-(length:--text-md) text-(--text-primary)"
             >
               {quantity}
-            </motion.span>
+            </m.span>
             <button
               type="button"
               disabled={!isAvailable}

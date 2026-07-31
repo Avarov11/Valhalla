@@ -2,8 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
-import { getMenu } from "@/lib/menu/get-menu";
-import { findItemById } from "@/lib/menu/find-item";
+import { getMenu, getMenuItemById } from "@/lib/menu/get-menu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ItemDetailContent } from "@/components/menu/ItemDetailContent";
 
@@ -16,15 +15,29 @@ export const revalidate = 60;
  * link and the theme toggle, rather than the full header and hero, since
  * someone landing here from a shared link is looking at one item, not
  * browsing the catalogue.
+ *
+ * Without generateStaticParams, a dynamic segment with no enumerated
+ * params builds as fully server-rendered on every single request (the
+ * "ƒ Dynamic" marker in `next build`'s output), paying a live Supabase
+ * round trip (~400ms to eu-west-1, measured directly) every time, ISR's
+ * revalidate alone doesn't turn that into a cached static response.
+ * With a known, bounded set (134 items) enumerating them here instead
+ * makes every item page a real static file at build time, ISR-revalidated
+ * every 60s same as before, cutting steady-state response to roughly what
+ * the homepage already gets rather than a fresh render each visit.
  */
+export async function generateStaticParams() {
+  const menu = await getMenu();
+  return menu.flatMap((category) => category.menu_items.map((item) => ({ id: item.id })));
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const menu = await getMenu();
-  const item = findItemById(menu, id);
+  const item = await getMenuItemById(id);
   if (!item) return { title: "Item not found - Valhalla" };
 
   return {
@@ -36,8 +49,7 @@ export async function generateMetadata({
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const menu = await getMenu();
-  const item = findItemById(menu, id);
+  const item = await getMenuItemById(id);
 
   if (!item) notFound();
 

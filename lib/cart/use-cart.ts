@@ -7,6 +7,18 @@ import { readCartLines, writeCartLines } from "@/lib/cart/storage";
 import { resolveCartLines } from "@/lib/cart/resolve";
 import { buildWhatsAppOrder } from "@/lib/cart/whatsapp";
 
+/**
+ * A cart line's real identity is item + size + addon selection, not
+ * just item + size: the same drink with different extras is a
+ * different order, not a quantity bump on the same one. addItem always
+ * sorts incoming ids before this runs (single place responsible for
+ * it, not every call site), so this is a plain positional compare, not
+ * a set comparison.
+ */
+function sameAddons(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((id, i) => id === b[i]);
+}
+
 export function useCart(menu: Menu) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [removedNotices, setRemovedNotices] = useState<RemovedNotice[]>([]);
@@ -25,11 +37,15 @@ export function useCart(menu: Menu) {
     setRemovedNotices(removed);
     setLines((current) =>
       current.filter(
-        (line) => !removed.some((r) => r.itemId === line.itemId && r.sizeLabel === line.sizeLabel),
+        (line) =>
+          !removed.some(
+            (r) =>
+              r.itemId === line.itemId &&
+              r.sizeLabel === line.sizeLabel &&
+              sameAddons(r.addonOptionIds, line.addonOptionIds),
+          ),
       ),
     );
-    // Only react to what actually got removed, not every line change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [removed, hydrated]);
 
   useEffect(() => {
@@ -37,34 +53,51 @@ export function useCart(menu: Menu) {
     writeCartLines(lines);
   }, [lines, hydrated]);
 
-  const addItem = useCallback((itemId: string, sizeLabel: string | null, quantity: number) => {
-    setLines((current) => {
-      const existingIndex = current.findIndex((l) => l.itemId === itemId && l.sizeLabel === sizeLabel);
-      if (existingIndex === -1) {
-        return [...current, { itemId, sizeLabel, quantity }];
-      }
-      const next = [...current];
-      next[existingIndex] = {
-        ...next[existingIndex],
-        quantity: next[existingIndex].quantity + quantity,
-      };
-      return next;
-    });
-  }, []);
+  const addItem = useCallback(
+    (itemId: string, sizeLabel: string | null, addonOptionIds: string[], quantity: number) => {
+      const sortedAddons = [...addonOptionIds].sort();
+      setLines((current) => {
+        const existingIndex = current.findIndex(
+          (l) => l.itemId === itemId && l.sizeLabel === sizeLabel && sameAddons(l.addonOptionIds, sortedAddons),
+        );
+        if (existingIndex === -1) {
+          return [...current, { itemId, sizeLabel, addonOptionIds: sortedAddons, quantity }];
+        }
+        const next = [...current];
+        next[existingIndex] = {
+          ...next[existingIndex],
+          quantity: next[existingIndex].quantity + quantity,
+        };
+        return next;
+      });
+    },
+    [],
+  );
 
-  const updateQuantity = useCallback((itemId: string, sizeLabel: string | null, quantity: number) => {
-    setLines((current) => {
-      if (quantity <= 0) {
-        return current.filter((l) => !(l.itemId === itemId && l.sizeLabel === sizeLabel));
-      }
-      return current.map((l) =>
-        l.itemId === itemId && l.sizeLabel === sizeLabel ? { ...l, quantity } : l,
-      );
-    });
-  }, []);
+  const updateQuantity = useCallback(
+    (itemId: string, sizeLabel: string | null, addonOptionIds: string[], quantity: number) => {
+      setLines((current) => {
+        if (quantity <= 0) {
+          return current.filter(
+            (l) => !(l.itemId === itemId && l.sizeLabel === sizeLabel && sameAddons(l.addonOptionIds, addonOptionIds)),
+          );
+        }
+        return current.map((l) =>
+          l.itemId === itemId && l.sizeLabel === sizeLabel && sameAddons(l.addonOptionIds, addonOptionIds)
+            ? { ...l, quantity }
+            : l,
+        );
+      });
+    },
+    [],
+  );
 
-  const removeItem = useCallback((itemId: string, sizeLabel: string | null) => {
-    setLines((current) => current.filter((l) => !(l.itemId === itemId && l.sizeLabel === sizeLabel)));
+  const removeItem = useCallback((itemId: string, sizeLabel: string | null, addonOptionIds: string[]) => {
+    setLines((current) =>
+      current.filter(
+        (l) => !(l.itemId === itemId && l.sizeLabel === sizeLabel && sameAddons(l.addonOptionIds, addonOptionIds)),
+      ),
+    );
   }, []);
 
   const clearCart = useCallback(() => setLines([]), []);

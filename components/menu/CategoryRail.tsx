@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import type { Category } from "@/lib/menu/types";
 
 type CategoryRailProps = {
@@ -38,7 +38,7 @@ export function CategoryRail({ categories, activeId }: CategoryRailProps) {
                 // Motion animates this pill's own position/size delta rather
                 // than cross-fading two separately-colored pills, so the
                 // highlight visibly slides between categories.
-                <motion.span
+                <m.span
                   layoutId="rail-active-indicator"
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
                   className="absolute inset-0 rounded-(--radius-pill) border border-(--accent-solid) bg-(--accent-subtle-bg)"

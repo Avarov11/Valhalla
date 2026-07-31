@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import type { Category } from "@/lib/menu/types";
 
 type CategorySidebarProps = {
@@ -36,7 +36,7 @@ export function CategorySidebar({ categories, activeId }: CategorySidebarProps) 
             className="relative flex min-h-11 items-center rounded-(--radius-md) px-3 py-2 text-left transition duration-(--duration-fast)"
           >
             {isActive ? (
-              <motion.span
+              <m.span
                 layoutId="sidebar-active-indicator"
                 transition={{ type: "spring", stiffness: 400, damping: 32 }}
                 className="absolute inset-0 rounded-(--radius-md) border border-(--accent-solid) bg-(--accent-subtle-bg)"
