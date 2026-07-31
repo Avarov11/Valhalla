@@ -83,6 +83,11 @@ Dials, split by surface:
 
 ## Known decisions, do not relitigate
 
+- When the photos are replaced with clean 1:1 shots that have no baked-in
+wave, the fixed-white footer plate (--surface-fixed-light) and the
+dark-on-light text pinning inside it can revert to normal theme-reactive
+tokens. It exists only to match the current template's baked wave.
+
 - `npm run dev` no longer passes `--turbopack`. Verified directly: with Turbopack, navigating to an intercepted route (`app/@modal/(.)item/[id]`, see Design) does not intercept at all, it does a full client-side route swap that blows away the grid behind it, no dialog, no preserved page. The exact same navigation against plain webpack `next dev` intercepts correctly, dialog present, grid preserved behind it, verified with real Playwright checks against both. `next build` was already plain webpack (never had the flag), so production is unaffected either way. Don't re-add `--turbopack` to dev without re-verifying this first, it's a real, currently-reproducible gap in this Next.js version, not a config mistake here.
 - `npm audit` reports high findings in dev-only and build-time transitives. `--force` would downgrade Next 15 to Next 9. Left alone deliberately.
 - Project region is `eu-west-1` rather than `eu-central-1`. Pages are ISR, so the database is a build-time dependency and images sit behind a CDN. Not worth recreating the project.
