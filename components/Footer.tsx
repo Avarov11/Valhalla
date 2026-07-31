@@ -1,11 +1,9 @@
-import Image from "next/image";
 import { FacebookLogo } from "@phosphor-icons/react/dist/ssr/FacebookLogo";
 import { InstagramLogo } from "@phosphor-icons/react/dist/ssr/InstagramLogo";
 import { MapPin } from "@phosphor-icons/react/dist/ssr/MapPin";
 import { Phone } from "@phosphor-icons/react/dist/ssr/Phone";
 import { TiktokLogo } from "@phosphor-icons/react/dist/ssr/TiktokLogo";
 import { WhatsappLogo } from "@phosphor-icons/react/dist/ssr/WhatsappLogo";
-import valMark from "@/val.png";
 
 const WHATSAPP_GREETING = "Hi Valhalla, I'd like to place an order.";
 const WHATSAPP_URL = `https://wa.me/201000100115?text=${encodeURIComponent(WHATSAPP_GREETING)}`;
@@ -30,54 +28,21 @@ const socials = [
 ];
 
 /**
- * Redesign (2026-07-29): the giant low-contrast background wordmark is
- * the same device Hero opens the page with, bleeding off the LEFT edge
- * here rather than the right, so the two bookends visually rhyme instead
- * of repeating identically. Asymmetric columns (3fr/2fr) and the map
- * panel pulled up over the content column via negative margin carry over
- * from the previous pass, both still fit the brief's "not centred" and
- * "overlap, not two clean rectangles" instincts.
+ * Redesign (2026-07-29): asymmetric columns (3fr/2fr) and the map panel
+ * pulled up over the content column via negative margin fit the brief's
+ * "not centred" and "overlap, not two clean rectangles" instincts.
  *
- * Both real-content blocks need `relative z-10` against the wordmark,
- * not just the first one (2026-07-31 fix): the wordmark is
- * `position: absolute` with no explicit z-index, and per CSS stacking
- * rules a positioned element at z-index:auto paints above unpositioned,
- * static in-flow content regardless of DOM order. The tagline block had
- * z-10 already; the contact/icons/map block didn't, so the wordmark was
- * rendering in front of it, muddying the social icons and tax note
- * against the giant letters behind them. The icon buttons additionally
- * get a solid `bg-(--bg-page)` fill, their border colour is the same
- * token as the wordmark's, so even correctly stacked on top, a
- * transparent circle would still show wordmark strokes bleeding through
- * its interior.
- *
- * EXPERIMENT (2026-07-31): wordmark is val.png (raster) instead of live
- * text, matching the same change in Hero.tsx, for the same reason: kept
- * consistent between the two bookends rather than leaving one on the
- * image and one on text. Same caveats as Hero.tsx: upscale softening
- * expected, --logo-invert plus opacity stands in for the themed
- * --border-default colour a text element could carry directly.
- *
- * Position (-bottom-[3vw] -left-[2vw]) is one rule for every
- * breakpoint, only width changes at lg (w-[130vw] lg:w-[76vw]),
- * matching exactly how the live-text version was built
- * (text-[34vw] lg:text-[20vw], same 1.7x ratio, same anchor point at
- * every size, per request after separate lg positioning attempts kept
- * missing). If this reads as too dominant on a very wide desktop, the
- * original text at that same width had the identical uncapped
- * scaling, this isn't a new problem the image introduced.
+ * 2026-07-29 through 2026-07-31 this section also carried a giant
+ * low-contrast "VALHALLA" background wordmark bleeding off the left edge
+ * (live text, then val.png raster), the same device Hero opened the page
+ * with on the right. Removed entirely by request (2026-07-31), matching
+ * Hero.tsx. If a background device is wanted here again, that's a new
+ * decision, not a revival of the prior wordmark.
  */
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-(--border-default) bg-(--bg-page)">
-      <Image
-        src={valMark}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-[3vw] -left-[2vw] w-[130vw] max-w-none select-none opacity-[0.16] [filter:var(--logo-invert)] lg:w-[76vw]"
-      />
-
-      <div className="relative z-10 mx-auto max-w-(--page-max-width) px-4 pt-12 lg:px-10 lg:pt-16">
+    <footer className="border-t border-(--border-default) bg-(--bg-page)">
+      <div className="mx-auto max-w-(--page-max-width) px-4 pt-12 lg:px-10 lg:pt-16">
         <p className="font-(family-name:--font-display) text-(length:--text-display-sm) leading-(--leading-tight) tracking-(--tracking-tight) text-(--text-primary)">
           Hall of Chimney Cakes
         </p>

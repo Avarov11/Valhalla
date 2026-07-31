@@ -84,31 +84,19 @@
   --font-body: var(--font-public-sans), "Segoe UI", system-ui, sans-serif;
   --font-arabic: var(--font-cairo), "Segoe UI", system-ui, sans-serif;
 
-  /* The background "VALHALLA" wordmark only (Hero.tsx), matching
-     val.png's brush-script mark. Not --font-display: REDESIGN.md bans
-     script/handwritten type for the page's display face generally, this
-     is one deliberate, scoped exception for the brand name specifically,
-     not a change to that rule. The real headline copy stays on
-     --font-display. Do not reuse this elsewhere without re-reading why
-     script was banned in the first place. */
-  --font-script: var(--font-kaushan-script), cursive;
-
   /* ---- Type scale (mobile-first, rem). Genuine range: the hero display
      step reaches ~7.5rem (120px) at wide viewports, because type is
      carrying the page now, not sitting quietly at 48px. ---- */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
-  --text-base: 1rem;
   --text-md: 1.125rem;
   --text-lg: 1.25rem;
-  --text-xl: 1.5rem;
   --text-2xl: 1.875rem;
   --text-3xl: 2.25rem;
   --text-display-sm: clamp(2.25rem, 1.6rem + 2.6vw, 3.25rem);
   --text-display-lg: clamp(2.5rem, 1.7rem + 4.2vw, 5rem);
 
   --leading-tight: 1.05;
-  --leading-snug: 1.25;
   --leading-normal: 1.5;
   --tracking-tight: -0.03em;
   --tracking-tighter: -0.045em;
@@ -136,9 +124,6 @@
 
   /* ---- Motion (MOTION_INTENSITY: 5, fluid-CSS band) ---- */
   --duration-fast: 150ms;
-  --duration-base: 250ms;
-  --duration-slow: 400ms;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ---- Layout constants ---- */
   --header-height: 3.75rem;
@@ -230,14 +215,6 @@
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
   --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
   --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
-
-  /* Rose-tinted, not the neutral shadow above: menu cards specifically
-     (see MenuItemCard.tsx) get a warm glow in the brand colour instead
-     of a plain drop shadow, rgba built from accent-600 (190, 24, 93).
-     Unavailable cards keep --shadow-md instead, plain and muted, so the
-     glow reads as "in stock and worth looking at" rather than sitting
-     under every card regardless of state. */
-  --shadow-card: 0 14px 32px -8px rgba(190, 24, 93, 0.22), 0 4px 10px -2px rgba(190, 24, 93, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -274,13 +251,6 @@
     --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
     --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
     --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
-
-    /* rgba built from accent-400 (229, 107, 160), the same vivid pink
-       dark mode already uses for running text, not accent-600: against
-       a near-black card background a glow needs to be the lighter,
-       more luminous shade to actually read, the darker brand anchor
-       would just look like a slightly warmer black shadow. */
-    --shadow-card: 0 16px 40px -8px rgba(229, 107, 160, 0.35), 0 6px 14px -2px rgba(229, 107, 160, 0.18);
   }
 }
 
@@ -321,14 +291,6 @@
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
   --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
   --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
-
-  /* Rose-tinted, not the neutral shadow above: menu cards specifically
-     (see MenuItemCard.tsx) get a warm glow in the brand colour instead
-     of a plain drop shadow, rgba built from accent-600 (190, 24, 93).
-     Unavailable cards keep --shadow-md instead, plain and muted, so the
-     glow reads as "in stock and worth looking at" rather than sitting
-     under every card regardless of state. */
-  --shadow-card: 0 14px 32px -8px rgba(190, 24, 93, 0.22), 0 4px 10px -2px rgba(190, 24, 93, 0.1);
 }
 
 [data-theme="dark"] {
@@ -358,14 +320,11 @@
   --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
   --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
   --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
-  --shadow-card: 0 16px 40px -8px rgba(229, 107, 160, 0.35), 0 6px 14px -2px rgba(229, 107, 160, 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0ms;
-    --duration-base: 0ms;
-    --duration-slow: 0ms;
   }
 }
 

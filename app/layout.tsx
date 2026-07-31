@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Public_Sans, Cairo, Kaushan_Script } from "next/font/google";
+import { Bricolage_Grotesque, Public_Sans, Cairo } from "next/font/google";
 import { LazyMotion, domMax, MotionConfig } from "motion/react";
 import { getMenu } from "@/lib/menu/get-menu";
 import { CartProvider } from "@/lib/cart/cart-context";
@@ -20,18 +20,6 @@ const publicSans = Public_Sans({
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
   variable: "--font-cairo",
-  display: "swap",
-});
-
-// Hero headline only, per val.png (closest Google Fonts match to that
-// bold brush-script logo mark, eyeballed, not extracted from the image).
-// REDESIGN.md bans script/handwritten display type everywhere else on
-// the page, this is a deliberate, scoped exception, not a reversal of
-// that rule, see Hero.tsx.
-const kaushanScript = Kaushan_Script({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-kaushan-script",
   display: "swap",
 });
 
@@ -73,7 +61,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${publicSans.variable} ${cairo.variable} ${kaushanScript.variable}`}
+      className={`${bricolage.variable} ${publicSans.variable} ${cairo.variable}`}
       // The inline script below sets data-theme on this element directly,
       // before hydration, to avoid a flash of the wrong theme. The server
       // never renders that attribute (it has no access to localStorage),
