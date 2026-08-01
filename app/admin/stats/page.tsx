@@ -1,14 +1,70 @@
+import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise";
+import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { Package } from "@phosphor-icons/react/dist/ssr/Package";
+import { Star } from "@phosphor-icons/react/dist/ssr/Star";
+import { Tag } from "@phosphor-icons/react/dist/ssr/Tag";
 import { getAdminMenu } from "@/lib/admin/get-admin-menu";
 import { formatPrice } from "@/lib/menu/format";
 
 export const dynamic = "force-dynamic";
 
-function StatCard({ label, value, sublabel }: { label: string; value: string; sublabel?: string }) {
+function greeting(hour: number): string {
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function StatTile({
+  icon,
+  color,
+  label,
+  value,
+  sublabel,
+}: {
+  icon: React.ReactNode;
+  color: string;
+  label: string;
+  value: string;
+  sublabel?: string;
+}) {
   return (
-    <div className="flex flex-col gap-1 rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-4">
-      <span className="text-(length:--text-xs) text-(--text-muted)">{label}</span>
-      <span className="font-(family-name:--font-display) text-(length:--text-2xl) text-(--text-primary)">{value}</span>
+    <div className="flex flex-col gap-3 rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-(length:--text-xs) font-medium uppercase tracking-(--tracking-wide) text-(--text-muted)">
+          {label}
+        </span>
+        <span
+          className="flex h-8 w-8 items-center justify-center rounded-(--radius-pill)"
+          style={{ backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`, color }}
+        >
+          {icon}
+        </span>
+      </div>
+      <span className="text-(length:--text-2xl) font-semibold text-(--text-primary)">{value}</span>
       {sublabel ? <span className="text-(length:--text-xs) text-(--text-secondary)">{sublabel}</span> : null}
+    </div>
+  );
+}
+
+/**
+ * Same-ramp track, one hue, filled to the ratio: the dataviz skill's own
+ * "single ratio against a limit" form (references/choosing-a-form.md),
+ * not a 2-slice donut, which that same guidance names as the wrong tool
+ * for exactly this job.
+ */
+function Meter({ label, count, total, color }: { label: string; count: number; total: number; color: string }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between">
+        <span className="text-(length:--text-sm) text-(--text-secondary)">{label}</span>
+        <span className="text-(length:--text-sm) font-semibold text-(--text-primary)">
+          {count} / {total} <span className="text-(--text-muted)">({pct}%)</span>
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-(--radius-pill) bg-(--bg-unavailable)">
+        <div className="h-full rounded-(--radius-pill)" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
     </div>
   );
 }
@@ -29,6 +85,7 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
 export default async function AdminStatsPage() {
   const menu = await getAdminMenu();
   const items = menu.flatMap((c) => c.menu_items);
+  const now = new Date();
 
   const totalItems = items.length;
   const availableCount = items.filter((i) => i.is_available).length;
@@ -51,11 +108,19 @@ export default async function AdminStatsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-(family-name:--font-display) text-(length:--text-2xl) text-(--text-primary)">Stats</h1>
-        <p className="mt-1 text-(length:--text-sm) text-(--text-secondary)">
-          Everything here is computed live from the current catalog. Nothing is invented.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-(length:--text-sm) text-(--text-muted)">
+            {now.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          </p>
+          <h1 className="mt-1 font-(family-name:--font-display) text-(length:--text-2xl) text-(--text-primary)">
+            {greeting(now.getHours())}, Admin
+          </h1>
+        </div>
+        <span className="flex items-center gap-1.5 pt-1 text-(length:--text-xs) text-(--text-muted)">
+          <ArrowsClockwise size={14} />
+          Updated just now
+        </span>
       </div>
 
       {/* Revenue deliberately isn't a number: no order is ever saved to the
@@ -63,25 +128,56 @@ export default async function AdminStatsPage() {
           CLAUDE.md, Admin dashboard). Showing $0 or a guess would be
           exactly the kind of fabricated business data this project has
           refused to do anywhere else (real facts only, see CLAUDE.md,
-          Content). This card says so plainly instead of hiding the gap. */}
-      <div className="rounded-(--radius-md) border border-(--accent-border-subtle) bg-(--accent-subtle-bg) p-4">
-        <p className="text-(length:--text-sm) font-medium text-(--accent-text)">Revenue: not available</p>
-        <p className="mt-1 text-(length:--text-xs) text-(--text-secondary)">
-          No order is ever saved anywhere, the WhatsApp checkout flow doesn&rsquo;t write to the database. This
-          will show real numbers once an orders table exists to compute them from, see the Orders tab.
+          Content). Styled like a KPI tile so it sits honestly among the
+          real ones instead of looking like an afterthought, dashed
+          border and a dash for a value says "not tracked", not "zero". */}
+      <div className="flex items-center justify-between gap-4 rounded-(--radius-md) border border-dashed border-(--border-strong) bg-(--bg-surface) p-4">
+        <div>
+          <span className="text-(length:--text-xs) font-medium uppercase tracking-(--tracking-wide) text-(--text-muted)">
+            Revenue
+          </span>
+          <p className="mt-1 text-(length:--text-2xl) font-semibold text-(--text-muted)">—</p>
+        </div>
+        <p className="max-w-md text-right text-(length:--text-xs) text-(--text-secondary)">
+          Not tracked yet. No order is saved to the database, checkout hands off to WhatsApp directly. This
+          fills in once an orders table exists, see the Orders tab.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total items" value={String(totalItems)} />
-        <StatCard label="Categories" value={String(menu.length)} />
-        <StatCard
+        <StatTile
+          icon={<Package size={16} weight="bold" />}
+          color="var(--admin-stat-blue)"
+          label="Total items"
+          value={String(totalItems)}
+        />
+        <StatTile
+          icon={<Tag size={16} weight="bold" />}
+          color="var(--admin-stat-orange)"
+          label="Categories"
+          value={String(menu.length)}
+        />
+        <StatTile
+          icon={<CheckCircle size={16} weight="bold" />}
+          color="var(--admin-stat-aqua)"
           label="Available now"
           value={String(availableCount)}
           sublabel={`${totalItems - availableCount} sold out`}
         />
-        <StatCard label="Marked popular" value={String(popularCount)} />
+        <StatTile
+          icon={<Star size={16} weight="bold" />}
+          color="var(--admin-stat-violet)"
+          label="Marked popular"
+          value={String(popularCount)}
+        />
       </div>
+
+      <section>
+        <h2 className="mb-3 text-(length:--text-lg) font-semibold text-(--text-primary)">Availability</h2>
+        <div className="rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-4">
+          <Meter label="In stock" count={availableCount} total={totalItems} color="var(--admin-status-good)" />
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-3 text-(length:--text-lg) font-semibold text-(--text-primary)">Items per category</h2>
