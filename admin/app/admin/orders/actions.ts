@@ -18,3 +18,14 @@ export async function setOrderStatus(orderId: string, status: OrderStatus): Prom
   revalidatePath("/admin/stats");
   return { ok: true };
 }
+
+export async function deleteOrder(orderId: string): Promise<ActionResult> {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("orders").delete().eq("id", orderId);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/stats");
+  return { ok: true };
+}
