@@ -69,17 +69,17 @@ export function Footer() {
             </a>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {socials.map(({ name, href, Icon }) => (
               <a
                 key={name}
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={name}
-                className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) bg-(--bg-page) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
+                className="flex min-h-11 items-center gap-1.5 rounded-(--radius-pill) border border-(--border-default) bg-(--bg-page) px-3 text-(length:--text-sm) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
               >
                 <Icon size={18} />
+                {name}
               </a>
             ))}
           </div>

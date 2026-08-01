@@ -23,6 +23,15 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+    // Next's default deviceSizes tops out at 2048/3840 for hero-banner
+    // sized images. Nothing on this site ever renders an image wider
+    // than the item detail view (capped around 36rem/576px CSS width),
+    // so even at 3x DPR that's ~1728px physical, comfortably under
+    // 1920. Capping here shrinks the largest tier `fill`-mode images
+    // fall back to on their plain `src` attribute (browsers without
+    // srcset support, or non-JS crawlers use this; real browsers use
+    // srcset+sizes and already request far smaller variants).
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
   },
 };
 

@@ -82,7 +82,11 @@ export function ItemDetailContent({
             alt={item.name_en}
             fill
             priority
-            sizes="(max-width: 640px) 100vw, 32rem"
+            // 36rem (576px), not 32rem: matches app/item/[id]/page.tsx's
+            // actual max-w-xl container exactly, and is a safe (slightly
+            // generous, never blurry) match for the intercepted modal's
+            // narrower lg:max-w-lg (512px) too.
+            sizes="(max-width: 640px) 100vw, 36rem"
             className={`object-contain ${isAvailable ? "" : "opacity-50"}`}
           />
         ) : null}

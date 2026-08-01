@@ -41,7 +41,15 @@ export function Hero() {
         className="relative z-10 mx-auto flex max-w-(--page-max-width) flex-col gap-5 px-4 py-14 sm:py-16 lg:gap-6 lg:px-10 lg:py-20"
       >
         <h1 className="font-(family-name:--font-display) text-(length:--text-display-lg) leading-(--leading-tight) tracking-(--tracking-tighter) text-(--text-primary)">
-          <span className="block">A warm hall.</span>
+          {/* The {" "} is a real space character in the text content, not
+              just visual spacing: `block` display gives the two-line look,
+              but adjacent JSX elements have no whitespace between them by
+              default, so anything reading the raw text (a screen reader,
+              copy-paste, search indexing) saw "A warm hall.Real chimney
+              cake." run together with no separator. A whitespace-only text
+              node between two block boxes is discarded from layout per
+              the CSS spec, so this doesn't introduce a visible gap. */}
+          <span className="block">A warm hall.</span>{" "}
           <span className="block text-(--accent-text)">Real chimney cake.</span>
         </h1>
 

@@ -112,7 +112,15 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
               src={item.image_url}
               alt={item.name_en}
               fill
-              sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 20vw"
+              // Below 1280px the page is still growing, so the vw shares
+              // match the 2/3/4-up grid breakpoints directly. Past 1280px
+              // the page itself stops growing (--page-max-width), so a
+              // flat vw share would keep requesting bigger images forever
+              // on wide monitors even though the rendered card doesn't
+              // grow past its plateau: 1280px page - 2*24px padding -
+              // 240px sidebar - 32px gap = 960px content column, minus
+              // 3*16px card gaps over 4 columns = 228px per card, fixed.
+              sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, (max-width: 1280px) 20vw, 228px"
               className={`object-contain ${isAvailable ? "" : "opacity-60"}`}
             />
           ) : null}
