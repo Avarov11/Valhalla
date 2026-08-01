@@ -1,0 +1,29 @@
+# The root .gitignore's patterns are anchored to the repo root (leading
+# slash), so they don't reach into this subdirectory. This repeats what's
+# needed for a standalone Next.js project living here.
+
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# env files (never commit real secrets). Deliberately NOT a broad .env*
+# catch-all: that would also block .env.example, which is exactly the
+# placeholder file meant to be tracked.
+.env
+.env.local
+.env.*.local
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

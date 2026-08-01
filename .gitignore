@@ -27,3 +27,11 @@ next-env.d.ts
 
 .vercel
 .env*
+# Unanchored above (no leading slash), reaches every subdirectory
+# including admin/, which is correct for real secrets but was also
+# silently blocking admin/.env.example from ever being tracked. That
+# file is a placeholder, meant to be committed, same as the root
+# .env.example already is (it predates this .env* line, which is the
+# only reason it's still tracked despite the pattern).
+!.env.example
+!**/.env.example

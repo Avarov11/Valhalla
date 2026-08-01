@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/*
+  Admin-only design tokens. This is a deliberate subset of the main
+  Valhalla site's app/globals.css (see that file's own header comment
+  for the full system, the accent ramp's contrast verification, and
+  the radius rule), forked here because this is now a genuinely
+  separate Next.js project (see CLAUDE.md, Admin dashboard) and can't
+  reach across to the main project's globals.css at build time. Only
+  the tokens app/admin/* actually references made the cut, checked
+  directly against the code (grep every --token across app/admin/),
+  not copied wholesale. If a future admin page needs a token that
+  isn't here, add it deliberately, matching the value in the main
+  project's globals.css exactly, don't invent a new one.
+*/
+
+@theme {
+  /* ---- Accent ramp (Rose, anchored on #be185d) ---- */
+  --color-accent-50: #fdf2f6;
+  --color-accent-100: #fce7ef;
+  --color-accent-200: #fad0e0;
+  --color-accent-300: #f2a8c8;
+  --color-accent-400: #e56ba0;
+  --color-accent-500: #d1266f;
+  --color-accent-600: #be185d;
+  --color-accent-700: #9d174d;
+  --color-accent-800: #7d1440;
+  --color-accent-900: #5c0f30;
+  --color-accent-950: #3d0a20;
+
+  /* ---- Neutral ramp (Charcoal/brass: warm, not cool Zinc/Slate) ---- */
+  --color-neutral-50: #f7f2ec;
+  --color-neutral-100: #ede4d8;
+  --color-neutral-200: #ddccb8;
+  --color-neutral-300: #c7b096;
+  --color-neutral-400: #a68a6d;
+  --color-neutral-500: #8a7058;
+  --color-neutral-600: #6b5843;
+  --color-neutral-700: #4d3f30;
+  --color-neutral-800: #332821;
+  --color-neutral-900: #241b16;
+  --color-neutral-950: #16110c;
+
+  --font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-public-sans), "Segoe UI", system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.25rem;
+  --text-2xl: 1.875rem;
+
+  --tracking-wide: 0.02em;
+
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+
+  --duration-fast: 150ms;
+
+  --page-max-width: 80rem;
+}
+
+:root {
+  color-scheme: light;
+
+  --bg-page: var(--color-accent-50);
+  --bg-surface: #ffffff;
+  --bg-surface-hover: var(--color-neutral-100);
+  --bg-unavailable: var(--color-neutral-100);
+  --bg-photo-panel: #ea87b7;
+
+  --text-primary: var(--color-neutral-900);
+  --text-secondary: var(--color-neutral-600);
+  --text-muted: #7a6350;
+  --text-on-accent: #ffffff;
+
+  --logo-invert: none;
+
+  --border-default: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-300);
+
+  --accent-solid: var(--color-accent-600);
+  --accent-text: var(--color-accent-600);
+  --accent-subtle-bg: var(--color-accent-50);
+
+  --admin-stat-blue: #2a78d6;
+  --admin-stat-orange: #eb6834;
+  --admin-stat-aqua: #1baf7a;
+  --admin-stat-violet: #4a3aa7;
+  --admin-status-good: #0ca30c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg-page: var(--color-neutral-950);
+    --bg-surface: var(--color-neutral-900);
+    --bg-surface-hover: var(--color-neutral-800);
+    --bg-unavailable: var(--color-neutral-900);
+
+    --text-primary: var(--color-neutral-50);
+    --text-secondary: var(--color-neutral-300);
+    --text-muted: var(--color-neutral-400);
+    --text-on-accent: #ffffff;
+    --logo-invert: invert(1);
+
+    --border-default: var(--color-neutral-800);
+    --border-strong: var(--color-neutral-700);
+
+    --accent-solid: var(--color-accent-600);
+    --accent-text: var(--color-accent-400);
+    --accent-subtle-bg: color-mix(in srgb, var(--color-accent-500) 16%, transparent);
+
+    --admin-stat-blue: #3987e5;
+    --admin-stat-orange: #d95926;
+    --admin-stat-aqua: #199e70;
+    --admin-stat-violet: #9085e9;
+    --admin-status-good: #0ca30c;
+  }
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-page: var(--color-accent-50);
+  --bg-surface: #ffffff;
+  --bg-surface-hover: var(--color-neutral-100);
+  --bg-unavailable: var(--color-neutral-100);
+
+  --text-primary: var(--color-neutral-900);
+  --text-secondary: var(--color-neutral-600);
+  --text-muted: #7a6350;
+  --text-on-accent: #ffffff;
+  --logo-invert: none;
+
+  --border-default: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-300);
+
+  --accent-solid: var(--color-accent-600);
+  --accent-text: var(--color-accent-600);
+  --accent-subtle-bg: var(--color-accent-50);
+
+  --admin-stat-blue: #2a78d6;
+  --admin-stat-orange: #eb6834;
+  --admin-stat-aqua: #1baf7a;
+  --admin-stat-violet: #4a3aa7;
+  --admin-status-good: #0ca30c;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-page: var(--color-neutral-950);
+  --bg-surface: var(--color-neutral-900);
+  --bg-surface-hover: var(--color-neutral-800);
+  --bg-unavailable: var(--color-neutral-900);
+
+  --text-primary: var(--color-neutral-50);
+  --text-secondary: var(--color-neutral-300);
+  --text-muted: var(--color-neutral-400);
+  --text-on-accent: #ffffff;
+  --logo-invert: invert(1);
+
+  --border-default: var(--color-neutral-800);
+  --border-strong: var(--color-neutral-700);
+
+  --accent-solid: var(--color-accent-600);
+  --accent-text: var(--color-accent-400);
+  --accent-subtle-bg: color-mix(in srgb, var(--color-accent-500) 16%, transparent);
+
+  --admin-stat-blue: #3987e5;
+  --admin-stat-orange: #d95926;
+  --admin-stat-aqua: #199e70;
+  --admin-stat-violet: #9085e9;
+  --admin-status-good: #0ca30c;
+}
+
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-solid);
+  outline-offset: 2px;
+}
