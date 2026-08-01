@@ -101,6 +101,13 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
       <Link
         href={`/item/${item.id}`}
         scroll={false}
+        // Default "auto" prefetch only warms the static shell for a
+        // dynamic route (this one can't be static, see CLAUDE.md's
+        // generateStaticParams entry), not the actual RSC payload, so
+        // the real fetch still happened synchronously on tap. `true`
+        // forces the full prefetch (on viewport visibility and hover)
+        // instead, so that cost is paid before the tap, not during it.
+        prefetch={true}
         aria-label={`View ${item.name_en}, ${hasSizes ? "from " : ""}${formatPrice(displayPrice)}${!isAvailable ? ", sold out" : ""}`}
         className="absolute inset-0 z-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-(--accent-ring) focus-visible:outline-offset-[-2px]"
       />
