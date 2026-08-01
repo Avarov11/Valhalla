@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Camera } from "@phosphor-icons/react";
 import type { MenuItemRow } from "@/lib/menu/types";
 import { formatPrice } from "@/lib/menu/format";
 import { updateItemFields, setAvailability, setPopular, deleteItem, replacePhoto } from "./actions";
@@ -126,10 +127,43 @@ export function ProductRow({ item }: { item: MenuItemRow }) {
   return (
     <div className="border-b border-(--border-default) last:border-b-0">
       <div className="flex items-center gap-3 py-2.5">
+        {/* The thumbnail itself is the photo control, not a field buried
+            inside Edit: click it, a file picker opens, upload replaces
+            it immediately. This was the actual fix for "why can't I
+            change images" as much as the underlying upload pipeline
+            was (that part already worked, verified end to end against
+            the real database); a native file input two clicks deep in
+            an edit form is easy to never notice. Sibling button + input
+            (input visually hidden, triggered via the ref), not an
+            input nested inside the button: same reasoning as every
+            other sibling-interactive-element pattern in this codebase,
+            a button can't correctly contain another native control. */}
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-(--radius-md) bg-(--bg-photo-panel)">
           {item.image_url ? (
             <Image src={item.image_url} alt={item.name_en} fill sizes="48px" className="object-contain" />
           ) : null}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isPending}
+            aria-label={`Change photo for ${item.name_en}`}
+            className="absolute inset-0 flex items-center justify-center bg-black/0 transition duration-(--duration-fast) hover:bg-black/40 disabled:cursor-not-allowed"
+          >
+            {/* Always faintly visible, not hover-only: hover alone isn't
+                discoverable on touch devices, and this was reported as
+                "I can't find how to do this," not just "it's subtle." */}
+            <span className="flex h-5 w-5 items-center justify-center rounded-(--radius-pill) bg-black/50 text-white">
+              <Camera size={12} weight="fill" />
+            </span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            disabled={isPending}
+            className="sr-only"
+          />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -261,10 +295,9 @@ export function ProductRow({ item }: { item: MenuItemRow }) {
             </label>
           )}
 
-          <label className="flex flex-col gap-1 text-(length:--text-xs) text-(--text-secondary)">
-            Replace photo
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} disabled={isPending} />
-          </label>
+          <p className="text-(length:--text-xs) text-(--text-muted)">
+            To change the photo, click the thumbnail in the row above instead of here.
+          </p>
 
           <div className="flex gap-2">
             <button
