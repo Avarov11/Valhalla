@@ -213,7 +213,6 @@
   /* Warm-tinted shadows, not black: rgba tinted toward the dark end of the
      neutral ramp (neutral-900 territory) rather than neutral black. */
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
-  --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
   --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
 }
 
@@ -249,7 +248,6 @@
 
     /* Warm-tinted (rose-adjacent), not neutral black, for "fire-lit" depth. */
     --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
-    --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
     --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
   }
 }
@@ -289,7 +287,6 @@
   --accent-border-subtle: var(--color-accent-300);
 
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
-  --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
   --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
 }
 
@@ -318,7 +315,6 @@
   --accent-border-subtle: var(--color-accent-800);
 
   --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
-  --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
   --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
 }
 

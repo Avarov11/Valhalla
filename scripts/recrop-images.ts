@@ -172,7 +172,7 @@ async function main() {
 
       const cropped = await smartCrop(original);
 
-      for (const ref of refs) {
+      for (let i = 0; i < refs.length; i++) {
         const marker = `/object/public/${BUCKET}/`;
         const idx = imageUrl.indexOf(marker);
         if (idx === -1) throw new Error(`unexpected image_url shape: ${imageUrl}`);
