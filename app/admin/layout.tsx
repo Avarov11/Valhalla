@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AdminNav } from "./AdminNav";
+import { AdminSidebar } from "./AdminSidebar";
 
 // Every /admin route is dynamic, always. There's nothing to prerender
 // (an authenticated, always-fresh area), and more importantly this
@@ -36,17 +37,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-dvh bg-(--bg-page)">
-      <header className="flex h-14 items-center justify-between px-4">
-        <span className="font-(family-name:--font-display) text-(length:--text-md) text-(--text-primary)">
-          Valhalla Admin
-        </span>
-        <span className="text-(length:--text-xs) text-(--text-muted)">
-          No login yet, local only
-        </span>
-      </header>
-      <AdminNav />
-      <main className="mx-auto max-w-(--page-max-width) px-4 py-6">{children}</main>
+    <div className="min-h-dvh bg-(--bg-page) lg:flex">
+      <AdminSidebar />
+
+      <div className="flex-1">
+        {/* Below lg only: AdminSidebar takes over this role at lg+, its
+            own footer note covers "no login yet" there instead. */}
+        <header className="flex h-14 items-center justify-between px-4 lg:hidden">
+          <span className="font-(family-name:--font-display) text-(length:--text-md) text-(--text-primary)">
+            Valhalla Admin
+          </span>
+          <span className="text-(length:--text-xs) text-(--text-muted)">No login yet, local only</span>
+        </header>
+        <div className="lg:hidden">
+          <AdminNav />
+        </div>
+        <main className="mx-auto max-w-(--page-max-width) px-4 py-6">{children}</main>
+      </div>
     </div>
   );
 }
