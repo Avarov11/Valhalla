@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, m } from "motion/react";
-import { ArrowLeft, Minus, Plus, WarningCircle, X } from "@phosphor-icons/react";
+import { ArrowLeft, Minus, PencilSimple, Plus, WarningCircle, X } from "@phosphor-icons/react";
 import type { ResolvedCartLine, RemovedNotice } from "@/lib/cart/types";
 import { formatPrice } from "@/lib/menu/format";
 import { buildWhatsAppOrder } from "@/lib/cart/whatsapp";
@@ -21,7 +21,18 @@ type CartDrawerProps = {
   grandTotal: number;
 };
 
-type Step = "cart" | "checkout";
+type Step = "cart" | "details" | "review";
+
+const STEP_TITLE: Record<Step, string> = {
+  cart: "Your order",
+  details: "Your details",
+  review: "Review order",
+};
+
+const BACK_STEP: Partial<Record<Step, Step>> = {
+  details: "cart",
+  review: "details",
+};
 
 function removalReason(notice: RemovedNotice): string {
   switch (notice.reason) {
@@ -76,17 +87,16 @@ function isValidPhone(phone: string): boolean {
 }
 
 /**
- * Select items -> cart -> checkout -> WhatsApp, not straight from cart
- * to WhatsApp (2026-08-01, explicit request). The cart step is
- * unchanged (quantities, removal, running total); "Checkout" now leads
- * to a second step inside the same drawer, a read-only order summary
- * plus a name and phone number the customer fills in, rather than a
- * separate route: this is still a transient, quick interaction, not a
- * page navigation, matching this project's own established pattern for
- * the cart panel and, at lg+, the item detail overlay. Both steps
- * share one drawer/sheet shell so the entrance/exit motion and
- * responsive shape (bottom sheet vs corner panel) only needs to be
- * defined once.
+ * Three steps now, not two (2026-08-01, direct follow-up): select
+ * items -> cart -> details (name, phone) -> review (a real order
+ * summary, contact info, then the confirm button) -> WhatsApp. The
+ * name/phone form used to share a screen with the order summary and
+ * the WhatsApp button all at once; splitting "enter your details" from
+ * "review what you're about to send" gives the review step room to
+ * actually look like a receipt instead of a form footnote, and gives
+ * the customer one clear last look before the message goes out. Cart
+ * step is unchanged. All three steps share one drawer/sheet shell, see
+ * useIsDesktopCart's own comment for why.
  */
 export function CartDrawer({
   open,
@@ -105,8 +115,8 @@ export function CartDrawer({
   const [customerPhone, setCustomerPhone] = useState("");
 
   // Always land back on the cart step, not mid-checkout, next time the
-  // drawer opens: reopening into an old checkout form (maybe from a
-  // stray tap days later) would be more confusing than a fresh start.
+  // drawer opens: reopening into an old form (maybe from a stray tap
+  // days later) would be more confusing than a fresh start.
   useEffect(() => {
     if (!open) {
       const t = setTimeout(() => setStep("cart"), 300);
@@ -151,6 +161,8 @@ export function CartDrawer({
     onClose();
   }
 
+  const backStep = BACK_STEP[step];
+
   return (
     <AnimatePresence>
       {open ? (
@@ -168,7 +180,7 @@ export function CartDrawer({
             key="cart-panel"
             role="dialog"
             aria-modal="true"
-            aria-label={step === "cart" ? "Cart" : "Checkout"}
+            aria-label={STEP_TITLE[step]}
             className="fixed inset-x-0 bottom-0 z-(--z-cart-sheet) flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-(--radius-lg) bg-(--bg-page) shadow-(--shadow-lg) md:max-w-xl md:mx-auto lg:inset-x-auto lg:mx-0 lg:left-auto lg:right-6 lg:top-6 lg:bottom-auto lg:max-h-[calc(100dvh-3rem)] lg:w-full lg:max-w-md lg:rounded-(--radius-lg)"
             initial={isDesktop ? { x: "100%" } : { y: "100%" }}
             animate={isDesktop ? { x: 0 } : { y: 0 }}
@@ -179,18 +191,18 @@ export function CartDrawer({
 
             <div className="flex items-center justify-between border-b border-(--border-default) px-4 py-3">
               <div className="flex items-center gap-1">
-                {step === "checkout" ? (
+                {backStep ? (
                   <button
                     type="button"
-                    onClick={() => setStep("cart")}
-                    aria-label="Back to cart"
+                    onClick={() => setStep(backStep)}
+                    aria-label={`Back to ${STEP_TITLE[backStep].toLowerCase()}`}
                     className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
                   >
                     <ArrowLeft size={18} />
                   </button>
                 ) : null}
                 <h2 className="font-(family-name:--font-display) text-(length:--text-lg) text-(--text-primary)">
-                  {step === "cart" ? "Your order" : "Checkout"}
+                  {STEP_TITLE[step]}
                 </h2>
               </div>
               <button
@@ -324,7 +336,7 @@ export function CartDrawer({
                   <button
                     type="button"
                     disabled={lines.length === 0}
-                    onClick={() => setStep("checkout")}
+                    onClick={() => setStep("details")}
                     className={`mt-3 flex w-full items-center justify-center rounded-(--radius-pill) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) ${
                       lines.length > 0
                         ? "bg-(--accent-solid) hover:bg-(--accent-solid-hover) active:scale-[0.98]"
@@ -335,35 +347,13 @@ export function CartDrawer({
                   </button>
                 </div>
               </>
-            ) : (
+            ) : step === "details" ? (
               <>
                 <div className="flex-1 overflow-y-auto px-4 py-3">
-                  <h3 className="mb-2 text-(length:--text-sm) font-semibold text-(--text-primary)">Order summary</h3>
-                  <ul className="flex flex-col gap-2 rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-3">
-                    {lines.map((line) => (
-                      <li
-                        key={`${line.itemId}-${line.sizeLabel ?? "flat"}-${line.addonOptionIds.join(",")}`}
-                        className="flex items-baseline justify-between gap-3 text-(length:--text-sm)"
-                      >
-                        <span className="text-(--text-secondary)">
-                          {line.quantity}x {line.name}
-                          {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
-                          {line.addons.length > 0 ? (
-                            <span className="text-(--text-muted)"> + {line.addons.map((a) => a.name).join(", ")}</span>
-                          ) : null}
-                        </span>
-                        <span className="shrink-0 font-medium text-(--text-primary)">
-                          {formatPrice(line.lineTotal)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2 flex items-center justify-between border-t border-(--border-default) pt-2 text-(length:--text-md) font-semibold text-(--text-primary)">
-                    <span>Total</span>
-                    <span>{formatPrice(grandTotal)}</span>
-                  </div>
-
-                  <div className="mt-5 flex flex-col gap-3">
+                  <p className="mb-4 text-(length:--text-sm) text-(--text-secondary)">
+                    So we know who to prepare this for.
+                  </p>
+                  <div className="flex flex-col gap-3">
                     <label className="flex flex-col gap-1 text-(length:--text-sm) text-(--text-secondary)">
                       Name
                       <input
@@ -372,6 +362,7 @@ export function CartDrawer({
                         onChange={(e) => setCustomerName(e.target.value)}
                         placeholder="Your name"
                         autoComplete="name"
+                        autoFocus
                         className="min-h-11 w-full rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) px-3 text-(length:--text-sm) text-(--text-primary) placeholder:text-(--text-muted) focus:border-(--accent-solid)"
                       />
                     </label>
@@ -390,6 +381,83 @@ export function CartDrawer({
                 </div>
 
                 <div className="border-t border-(--border-default) px-4 py-3">
+                  <button
+                    type="button"
+                    disabled={!canSubmit}
+                    onClick={() => setStep("review")}
+                    className={`flex w-full items-center justify-center rounded-(--radius-pill) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) ${
+                      canSubmit
+                        ? "bg-(--accent-solid) hover:bg-(--accent-solid-hover) active:scale-[0.98]"
+                        : "cursor-not-allowed bg-(--bg-unavailable) text-(--text-muted)"
+                    }`}
+                  >
+                    Continue
+                  </button>
+                  {!canSubmit ? (
+                    <p className="mt-2 text-center text-(length:--text-xs) text-(--text-muted)">
+                      Enter your name and phone number to continue.
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex-1 overflow-y-auto px-4 py-3">
+                  <div className="flex items-center justify-between rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-3">
+                    <div>
+                      <p className="text-(length:--text-sm) font-medium text-(--text-primary)">{customerName}</p>
+                      <p className="text-(length:--text-xs) text-(--text-secondary)">{customerPhone}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep("details")}
+                      aria-label="Edit your details"
+                      className="flex h-9 w-9 items-center justify-center rounded-(--radius-pill) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
+                    >
+                      <PencilSimple size={16} />
+                    </button>
+                  </div>
+
+                  <h3 className="mb-2 mt-4 text-(length:--text-sm) font-semibold text-(--text-primary)">
+                    Order summary
+                  </h3>
+                  <ul className="flex flex-col gap-3 rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-3">
+                    {lines.map((line) => (
+                      <li
+                        key={`${line.itemId}-${line.sizeLabel ?? "flat"}-${line.addonOptionIds.join(",")}`}
+                        className="flex items-start justify-between gap-3 text-(length:--text-sm)"
+                      >
+                        <div>
+                          <p className="text-(--text-primary)">
+                            <span className="font-medium">{line.quantity}x</span> {line.name}
+                            {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
+                          </p>
+                          {line.addons.length > 0 ? (
+                            <p className="text-(length:--text-xs) text-(--text-muted)">
+                              + {line.addons.map((a) => a.name).join(", ")}
+                            </p>
+                          ) : null}
+                        </div>
+                        <span className="shrink-0 font-medium text-(--text-primary)">
+                          {formatPrice(line.lineTotal)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-3 flex flex-col gap-1 rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-3">
+                    <div className="flex items-center justify-between text-(length:--text-md) font-semibold text-(--text-primary)">
+                      <span>Total</span>
+                      <span>{formatPrice(grandTotal)}</span>
+                    </div>
+                    <p className="text-(length:--text-xs) text-(--text-muted)">Prices include taxes</p>
+                    <p className="font-(family-name:--font-arabic) text-(length:--text-xs) text-(--text-muted)">
+                      السعر شامل القيمة المضافة
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-(--border-default) px-4 py-3">
                   {whatsapp.truncated ? (
                     <p className="mb-2 text-(length:--text-xs) text-(--text-muted)">
                       The order message was shortened for WhatsApp. The total above already includes every item.
@@ -397,30 +465,14 @@ export function CartDrawer({
                   ) : null}
 
                   <a
-                    href={canSubmit ? whatsapp.url : undefined}
+                    href={whatsapp.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-disabled={!canSubmit}
-                    onClick={(e) => {
-                      if (!canSubmit) {
-                        e.preventDefault();
-                        return;
-                      }
-                      handleSubmit();
-                    }}
-                    className={`flex w-full items-center justify-center rounded-(--radius-pill) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) ${
-                      canSubmit
-                        ? "bg-(--accent-solid) hover:bg-(--accent-solid-hover) active:scale-[0.98]"
-                        : "cursor-not-allowed bg-(--bg-unavailable) text-(--text-muted)"
-                    }`}
+                    onClick={handleSubmit}
+                    className="flex w-full items-center justify-center rounded-(--radius-pill) bg-(--accent-solid) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) hover:bg-(--accent-solid-hover) active:scale-[0.98]"
                   >
                     Order on WhatsApp
                   </a>
-                  {!canSubmit ? (
-                    <p className="mt-2 text-center text-(length:--text-xs) text-(--text-muted)">
-                      Enter your name and phone number to continue.
-                    </p>
-                  ) : null}
                 </div>
               </>
             )}
