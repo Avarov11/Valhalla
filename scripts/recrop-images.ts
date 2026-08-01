@@ -4,7 +4,6 @@ config({ path: ".env.local" });
 import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
 
-const BUCKET = "menu-images";
 const TARGET = 1200;
 const WEBP_QUALITY = 85;
 
@@ -173,13 +172,22 @@ async function main() {
       const cropped = await smartCrop(original);
 
       for (let i = 0; i < refs.length; i++) {
-        const marker = `/object/public/${BUCKET}/`;
+        // One bucket per category now, not one shared bucket (see
+        // CLAUDE.md, Known decisions), so the bucket has to be read
+        // back out of each image_url rather than assumed fixed: every
+        // item's URL embeds its own bucket name right after
+        // /object/public/, whatever that item's current category is.
+        const marker = "/object/public/";
         const idx = imageUrl.indexOf(marker);
         if (idx === -1) throw new Error(`unexpected image_url shape: ${imageUrl}`);
-        const storagePath = imageUrl.slice(idx + marker.length);
+        const afterMarker = imageUrl.slice(idx + marker.length);
+        const slashIdx = afterMarker.indexOf("/");
+        if (slashIdx === -1) throw new Error(`unexpected image_url shape: ${imageUrl}`);
+        const bucket = afterMarker.slice(0, slashIdx);
+        const storagePath = afterMarker.slice(slashIdx + 1);
 
         const { error: uploadError } = await supabase.storage
-          .from(BUCKET)
+          .from(bucket)
           .upload(storagePath, cropped, { contentType: "image/webp", upsert: true });
 
         if (uploadError) throw uploadError;

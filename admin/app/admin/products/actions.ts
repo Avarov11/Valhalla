@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const BUCKET = "menu-images";
 const MAX_WIDTH = 1600;
 const WEBP_QUALITY = 82;
 
@@ -207,11 +206,19 @@ export async function createItem(fields: {
  * Runs the exact same resize + WebP conversion as scripts/upload-images.ts
  * (1600px max width, quality 82), so an owner-uploaded photo never lands
  * in storage as a raw multi-megabyte PNG regardless of what they picked
- * on their end. Overwrites the item's existing storage path (upsert)
- * when it has one, so image_url never changes on a replace, matching
- * "every item owns its own storage object" (CLAUDE.md). An item with no
- * photo yet gets a fresh path, same category-slug/item-slug convention
- * the seed pipeline uses.
+ * on their end.
+ *
+ * One bucket per category, not one shared bucket with a category-slug
+ * path prefix (2026-08-01, direct request, all 134 existing images
+ * already migrated). The bucket is always the item's current category
+ * slug and the path is always its own item slug, computed fresh on
+ * every replace rather than parsed back out of the existing image_url:
+ * items can't be recategorized through this admin yet (updateItemFields
+ * never touches category_id), so "current category" and "the category
+ * this photo already lives under" are always the same thing, and
+ * computing fresh is simpler than round-tripping through the URL.
+ * Still an upsert to the same path, so image_url itself never changes
+ * on a replace, matching "every item owns its own storage object."
  */
 export async function replacePhoto(itemId: string, formData: FormData): Promise<ActionResult> {
   const file = formData.get("photo");
@@ -223,7 +230,7 @@ export async function replacePhoto(itemId: string, formData: FormData): Promise<
 
   const { data: item, error: fetchError } = await supabase
     .from("menu_items")
-    .select("id, name_en, image_url, categories(slug)")
+    .select("id, name_en, categories(slug)")
     .eq("id", itemId)
     .single();
 
@@ -231,15 +238,11 @@ export async function replacePhoto(itemId: string, formData: FormData): Promise<
     return { ok: false, error: fetchError?.message ?? "Item not found." };
   }
 
-  let storagePath: string;
-  const marker = `/storage/v1/object/public/${BUCKET}/`;
-  const existingIdx = item.image_url?.indexOf(marker) ?? -1;
-  if (item.image_url && existingIdx !== -1) {
-    storagePath = item.image_url.slice(existingIdx + marker.length);
-  } else {
-    const categorySlug = (item.categories as unknown as { slug: string } | null)?.slug ?? "misc";
-    storagePath = `${categorySlug}/${slugify(item.name_en)}.webp`;
+  const categorySlug = (item.categories as unknown as { slug: string } | null)?.slug;
+  if (!categorySlug) {
+    return { ok: false, error: "Item has no category, can't determine which bucket to store its photo in." };
   }
+  const storagePath = `${slugify(item.name_en)}.webp`;
 
   let webpBuffer: Buffer;
   try {
@@ -253,14 +256,14 @@ export async function replacePhoto(itemId: string, formData: FormData): Promise<
   }
 
   const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
+    .from(categorySlug)
     .upload(storagePath, webpBuffer, { contentType: "image/webp", upsert: true });
 
   if (uploadError) {
     return { ok: false, error: uploadError.message };
   }
 
-  const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
+  const { data: publicUrlData } = supabase.storage.from(categorySlug).getPublicUrl(storagePath);
 
   const { error: updateError } = await supabase
     .from("menu_items")

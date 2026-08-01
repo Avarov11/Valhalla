@@ -28,7 +28,6 @@ type MenuJson = {
   categories: MenuCategory[];
 };
 
-const BUCKET = "menu-images";
 const MAX_WIDTH = 1600;
 const WEBP_QUALITY = 82;
 
@@ -121,22 +120,22 @@ async function main() {
     }
 
     for (const ref of itemRefs) {
-      const storagePath = `${ref.categorySlug}/${ref.itemSlug}.webp`;
+      const storagePath = `${ref.itemSlug}.webp`;
 
       const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
+        .from(ref.categorySlug)
         .upload(storagePath, webpBuffer, {
           contentType: "image/webp",
           upsert: true,
         });
 
       if (uploadError) {
-        failures.push({ imagePath: `${imagePath} -> ${storagePath}`, error: uploadError.message });
+        failures.push({ imagePath: `${ref.categorySlug}/${storagePath}`, error: uploadError.message });
         continue;
       }
       uploaded += 1;
 
-      const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
+      const { data: publicUrlData } = supabase.storage.from(ref.categorySlug).getPublicUrl(storagePath);
 
       const { data: category } = await supabase
         .from("categories")
