@@ -6,6 +6,7 @@ import { AnimatePresence, m } from "motion/react";
 import { Minus, Plus, WarningCircle, X } from "@phosphor-icons/react";
 import type { ResolvedCartLine, RemovedNotice } from "@/lib/cart/types";
 import { formatPrice } from "@/lib/menu/format";
+import { createOrder } from "@/lib/orders/create-order";
 
 type CartDrawerProps = {
   open: boolean;
@@ -80,6 +81,24 @@ export function CartDrawer({
   whatsappTruncated,
 }: CartDrawerProps) {
   const isDesktop = useIsDesktopCart();
+
+  // Fire-and-forget, deliberately not awaited: the WhatsApp link (a
+  // target="_blank" anchor) opens in a new tab regardless of what this
+  // does, so there's nothing to block it on and no loading state to
+  // show. This is the owner's bookkeeping copy of the order, not the
+  // order itself, see lib/orders/create-order.ts's own comment for why
+  // a failure here is silently swallowed rather than shown to the
+  // customer, who has already sent (or is sending) the real order over
+  // WhatsApp regardless.
+  function recordOrder() {
+    const cartLines = lines.map((line) => ({
+      itemId: line.itemId,
+      sizeLabel: line.sizeLabel,
+      addonOptionIds: line.addonOptionIds,
+      quantity: line.quantity,
+    }));
+    void createOrder(cartLines).catch(() => {});
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -259,7 +278,11 @@ export function CartDrawer({
                 rel="noopener noreferrer"
                 aria-disabled={lines.length === 0}
                 onClick={(e) => {
-                  if (lines.length === 0) e.preventDefault();
+                  if (lines.length === 0) {
+                    e.preventDefault();
+                    return;
+                  }
+                  recordOrder();
                 }}
                 className={`mt-3 flex w-full items-center justify-center rounded-(--radius-pill) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) ${
                   lines.length > 0

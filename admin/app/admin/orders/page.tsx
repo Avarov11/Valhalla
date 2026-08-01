@@ -1,42 +1,47 @@
-export const dynamic = "force-dynamic";
+import { getAdminOrders } from "@/lib/admin/get-admin-orders";
+import { OrderCard } from "./OrderCard";
+
+// Same ISR window as products/stats, see those pages' own comments for
+// the full reasoning. setOrderStatus already calls revalidatePath on
+// this route, so a status change is reflected immediately regardless.
+export const revalidate = 30;
 
 /**
- * No orders table exists (see CLAUDE.md, Admin dashboard). The public
- * checkout flow builds a cart client-side and opens a wa.me link with
- * the order pre-filled as text, nothing is ever written to Supabase.
- * This page says that plainly rather than shipping a list that's
- * either empty forever or, worse, invites someone to wire it up to
- * fake data later. Building this for real needs a real decision: a new
- * table, what gets persisted and when, and critically how an anonymous
- * customer's browser is allowed to write to it, since right now every
- * anonymous insert/update/delete is denied everywhere in this project,
- * on purpose. That's a schema and security conversation, not a UI one.
+ * Real orders now (2026-08-01), built on direct request after being
+ * deferred earlier the same day (see CLAUDE.md, Admin dashboard,
+ * Orders). Each row here was written by lib/orders/create-order.ts on
+ * the customer site, at the moment "Order on WhatsApp" was clicked,
+ * re-resolved server-side against live menu data rather than trusted
+ * from the browser. This page only reads and updates status, it never
+ * writes a new order itself, that only ever happens from the customer
+ * site's own checkout flow.
  */
-export default function AdminOrdersPage() {
+export default async function AdminOrdersPage() {
+  const orders = await getAdminOrders();
+
   return (
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="font-(family-name:--font-display) text-(length:--text-2xl) text-(--text-primary)">Orders</h1>
         <p className="mt-1 text-(length:--text-sm) text-(--text-secondary)">
-          Nothing to show yet, and that&rsquo;s accurate, not a bug.
+          {orders.length} order{orders.length === 1 ? "" : "s"} recorded.
         </p>
       </div>
 
-      <div className="rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-6">
-        <p className="text-(length:--text-sm) font-medium text-(--text-primary)">No orders are ever saved.</p>
-        <p className="mt-2 max-w-2xl text-(length:--text-sm) text-(--text-secondary)">
-          Checkout on the live site builds a cart in the browser, then opens WhatsApp with the order written out
-          as a pre-filled message. That message is sent directly, it never touches this database. There is
-          nothing this page could list without inventing it.
-        </p>
-        <p className="mt-3 max-w-2xl text-(length:--text-sm) text-(--text-secondary)">
-          Turning this into a real list needs an <code>orders</code> table and a decision about how an order gets
-          saved (probably: writing one at the moment &ldquo;Order on WhatsApp&rdquo; is clicked), including how an anonymous
-          customer&rsquo;s browser is allowed to write to it, since every anonymous write is denied everywhere
-          in this project right now, on purpose. That&rsquo;s a schema and RLS decision, not something to bolt
-          onto this page.
-        </p>
-      </div>
+      {orders.length === 0 ? (
+        <div className="rounded-(--radius-md) border border-dashed border-(--border-strong) p-6 text-center">
+          <p className="text-(length:--text-sm) font-medium text-(--text-primary)">No orders yet.</p>
+          <p className="mt-1 text-(length:--text-sm) text-(--text-secondary)">
+            A row appears here the moment a customer taps &ldquo;Order on WhatsApp&rdquo; on the live site.
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {orders.map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

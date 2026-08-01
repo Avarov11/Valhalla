@@ -1,9 +1,11 @@
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise";
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { Package } from "@phosphor-icons/react/dist/ssr/Package";
+import { Receipt } from "@phosphor-icons/react/dist/ssr/Receipt";
 import { Star } from "@phosphor-icons/react/dist/ssr/Star";
 import { Tag } from "@phosphor-icons/react/dist/ssr/Tag";
 import { getAdminMenu } from "@/lib/admin/get-admin-menu";
+import { getAdminOrders } from "@/lib/admin/get-admin-orders";
 import { formatPrice } from "@/lib/menu/format";
 
 // See products/page.tsx's comment: same switch from force-dynamic to a
@@ -85,9 +87,16 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
 }
 
 export default async function AdminStatsPage() {
-  const menu = await getAdminMenu();
+  const [menu, orders] = await Promise.all([getAdminMenu(), getAdminOrders()]);
   const items = menu.flatMap((c) => c.menu_items);
   const now = new Date();
+
+  // Cancelled orders excluded: never fulfilled, counting them would
+  // overstate what actually came in. New and confirmed both count,
+  // not just completed, since there's no reliable signal yet for when
+  // an order actually gets marked completed versus just left as
+  // confirmed, see admin/app/admin/orders/OrderCard.tsx.
+  const revenue = orders.filter((o) => o.status !== "cancelled").reduce((sum, o) => sum + o.total_price, 0);
 
   const totalItems = items.length;
   const availableCount = items.filter((i) => i.is_available).length;
@@ -132,28 +141,38 @@ export default async function AdminStatsPage() {
         </span>
       </div>
 
-      {/* Revenue deliberately isn't a number: no order is ever saved to the
-          database, the WhatsApp checkout flow is fire-and-forget (see
-          CLAUDE.md, Admin dashboard). Showing $0 or a guess would be
-          exactly the kind of fabricated business data this project has
-          refused to do anywhere else (real facts only, see CLAUDE.md,
-          Content). Styled like a KPI tile so it sits honestly among the
-          real ones instead of looking like an afterthought, dashed
-          border and a dash for a value says "not tracked", not "zero". */}
+      {/* Real now (2026-08-01): orders started being recorded the same
+          day, see CLAUDE.md, Admin dashboard, Orders, and
+          lib/orders/create-order.ts on the customer site. Computed
+          directly from the orders table, same "real facts only, never
+          invent business data" rule as everywhere else, not a guess and
+          not hidden behind a dash anymore now that there's something
+          real to show. Still styled distinctly (dashed border) rather
+          than folded into the KPI grid below: it's the newest, least-
+          proven number on this page, worth a beat of "this is recent"
+          rather than blending in as if it's been solid for months. */}
       <div className="flex items-center justify-between gap-4 rounded-(--radius-md) border border-dashed border-(--border-strong) bg-(--bg-surface) p-4">
         <div>
           <span className="text-(length:--text-xs) font-medium uppercase tracking-(--tracking-wide) text-(--text-muted)">
             Revenue
           </span>
-          <p className="mt-1 text-(length:--text-2xl) font-semibold text-(--text-muted)">—</p>
+          <p className="mt-1 text-(length:--text-2xl) font-semibold text-(--text-primary)">{formatPrice(revenue)}</p>
         </div>
         <p className="max-w-md text-right text-(length:--text-xs) text-(--text-secondary)">
-          Not tracked yet. No order is saved to the database, checkout hands off to WhatsApp directly. This
-          fills in once an orders table exists, see the Orders tab.
+          Sum of {orders.filter((o) => o.status !== "cancelled").length} order
+          {orders.filter((o) => o.status !== "cancelled").length === 1 ? "" : "s"}, cancelled orders excluded.
+          Recorded the moment &ldquo;Order on WhatsApp&rdquo; is tapped, see the Orders tab.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <StatTile
+          icon={<Receipt size={16} weight="bold" />}
+          color="var(--admin-stat-blue)"
+          label="Orders"
+          value={String(orders.length)}
+          sublabel={orders.length > 0 ? `${orders.filter((o) => o.status === "new").length} new` : undefined}
+        />
         <StatTile
           icon={<Package size={16} weight="bold" />}
           color="var(--admin-stat-blue)"
