@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 // /admin/* (kept nested exactly as it was inside the main project when
 // this got split out, see CLAUDE.md, Admin dashboard, to minimize risk
 // during the move). Redirect straight there instead of a 404 on the
-// bare domain.
+// bare domain. Stats, not Products: see admin/page.tsx's own comment.
 export default function RootIndex() {
-  redirect("/admin/products");
+  redirect("/admin/stats");
 }

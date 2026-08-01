@@ -27,3 +27,7 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Vercel CLI (added by `vercel link`/`vercel env add`, project link config
+# and pulled env values, never secrets meant for git)
+.vercel

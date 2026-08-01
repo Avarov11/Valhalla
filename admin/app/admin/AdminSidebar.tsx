@@ -7,8 +7,8 @@ import { ChartBar, Package, ShoppingBag } from "@phosphor-icons/react";
 import logoMark from "@/logo.png";
 
 const NAV_ITEMS = [
-  { href: "/admin/products", label: "Products", sublabel: "Menu items & pricing", icon: Package },
   { href: "/admin/stats", label: "Stats", sublabel: "Overview & catalog health", icon: ChartBar },
+  { href: "/admin/products", label: "Products", sublabel: "Menu items & pricing", icon: Package },
   { href: "/admin/orders", label: "Orders", sublabel: "Customer orders", icon: ShoppingBag },
 ];
 

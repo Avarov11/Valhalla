@@ -19,7 +19,7 @@ function slugify(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function revalidate() {
+async function revalidate() {
   // Both, not just products: now that both pages carry a short ISR
   // window (see products/page.tsx, stats/page.tsx) instead of
   // force-dynamic, Stats' aggregate counts read from the same
@@ -27,6 +27,44 @@ function revalidate() {
   // not just Products' own list.
   revalidatePath("/admin/products");
   revalidatePath("/admin/stats");
+  await revalidateCustomerSite();
+}
+
+/**
+ * admin/ and the customer-facing site are separate Vercel deployments
+ * (see CLAUDE.md, Admin dashboard), so the revalidatePath calls above
+ * only ever clear THIS project's own cache. Without this, an owner's
+ * edit here would still reach the customer site, just up to 60s later
+ * via its own ISR window (app/(customer)/page.tsx's revalidate = 60 in
+ * the main project), not never: CLAUDE.md's actual hard requirement
+ * (never charge a stale PRICE at order time) is already met by the DB
+ * write itself finishing before this even runs. This purely controls
+ * how fast a name/price/photo/availability change becomes visible to a
+ * customer looking at the menu right now.
+ *
+ * Best-effort on purpose: if the customer site is slow or unreachable,
+ * the mutation already succeeded against the database, and the 60s ISR
+ * window is the fallback, so a failure here is swallowed rather than
+ * surfaced as an admin-facing error. A 4s timeout keeps a slow customer
+ * deployment from making every admin save feel slow.
+ */
+async function revalidateCustomerSite() {
+  const baseUrl = process.env.CUSTOMER_SITE_URL;
+  const secret = process.env.REVALIDATE_SECRET;
+  if (!baseUrl || !secret) return;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    await fetch(`${baseUrl}/api/revalidate`, {
+      method: "POST",
+      headers: { "x-revalidate-secret": secret },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+  } catch {
+    // See comment above: swallowed by design.
+  }
 }
 
 /**
@@ -77,7 +115,7 @@ export async function updateItemFields(
     }
   }
 
-  revalidate();
+  await revalidate();
   return { ok: true };
 }
 
@@ -89,7 +127,7 @@ export async function setAvailability(itemId: string, isAvailable: boolean): Pro
     .eq("id", itemId);
 
   if (error) return { ok: false, error: error.message };
-  revalidate();
+  await revalidate();
   return { ok: true };
 }
 
@@ -101,7 +139,7 @@ export async function setPopular(itemId: string, isPopular: boolean): Promise<Ac
     .eq("id", itemId);
 
   if (error) return { ok: false, error: error.message };
-  revalidate();
+  await revalidate();
   return { ok: true };
 }
 
@@ -110,7 +148,7 @@ export async function deleteItem(itemId: string): Promise<ActionResult> {
   const { error } = await supabase.from("menu_items").delete().eq("id", itemId);
 
   if (error) return { ok: false, error: error.message };
-  revalidate();
+  await revalidate();
   return { ok: true };
 }
 
@@ -161,7 +199,7 @@ export async function createItem(fields: {
     return { ok: false, error: error.message };
   }
 
-  revalidate();
+  await revalidate();
   return { ok: true };
 }
 
@@ -233,6 +271,6 @@ export async function replacePhoto(itemId: string, formData: FormData): Promise<
     return { ok: false, error: updateError.message };
   }
 
-  revalidate();
+  await revalidate();
   return { ok: true };
 }
