@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Public_Sans, Cairo } from "next/font/google";
 import { LazyMotion, domMax, MotionConfig } from "motion/react";
 import { getMenu } from "@/lib/menu/get-menu";
 import { CartProvider } from "@/lib/cart/cart-context";
+import { MenuProvider } from "@/lib/menu/menu-context";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -33,11 +34,15 @@ export const metadata: Metadata = {
 
 /**
  * Fetches the menu once here (in addition to page.tsx's own fetch for the
- * grid) so the cart context can be provided above both `children` and the
- * `modal` parallel slot. Item detail is a real route now
- * (app/item/[id], intercepted from within the app via app/@modal), which
- * put "add to cart" in a subtree that shares no client ancestor with the
- * main page's grid unless the provider sits up here, at the root.
+ * grid) so the cart and menu contexts can both be provided above both
+ * `children` and the `modal` parallel slot. Item detail is a real route
+ * now (app/item/[id], intercepted from within the app via app/@modal),
+ * which put "add to cart" in a subtree that shares no client ancestor
+ * with the main page's grid unless the providers sit up here, at the
+ * root. MenuProvider (lib/menu/menu-context.tsx) exists specifically so
+ * the intercepted modal can read a tapped item's full data straight from
+ * what's already loaded, instead of the modal route re-fetching from
+ * Supabase on every tap, see ItemModal.tsx's own comment.
  *
  * LazyMotion wraps the whole tree so every component below imports the
  * lightweight `m` component instead of the full `motion` component,
@@ -81,10 +86,12 @@ export default async function RootLayout({
         />
         <LazyMotion features={domMax} strict>
           <MotionConfig reducedMotion="user">
-            <CartProvider menu={menu}>
-              {children}
-              {modal}
-            </CartProvider>
+            <MenuProvider menu={menu}>
+              <CartProvider menu={menu}>
+                {children}
+                {modal}
+              </CartProvider>
+            </MenuProvider>
           </MotionConfig>
         </LazyMotion>
       </body>

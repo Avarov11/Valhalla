@@ -1,5 +1,3 @@
-import { notFound } from "next/navigation";
-import { getMenuItemById } from "@/lib/menu/get-menu";
 import { ItemModal } from "@/components/menu/ItemModal";
 
 export const revalidate = 60;
@@ -22,6 +20,17 @@ export const revalidate = 60;
  * instead of invoking the function. Left dynamic here on purpose. The
  * standalone page doesn't have this problem (no interception, no
  * Next-Url dependency) and keeps its own generateStaticParams.
+ *
+ * NO Supabase call here (2026-08-01): this used to call getMenuItemById
+ * on every tap, a real ~176-351ms server-side round trip, which turned
+ * out to be the actual "lag" a production report traced back to, not
+ * this route's staying dynamic per the note above. It doesn't need to:
+ * the tapped item's full data is already loaded client-side (the same
+ * menu the grid rendered it from), so ItemModal reads it from
+ * MenuProvider (lib/menu/menu-context.tsx) instead. This route now does
+ * zero external I/O, just resolving the id and handing it off; the
+ * remaining server hop is Next's own interception resolution, not a
+ * database round trip.
  */
 export default async function InterceptedItemModal({
   params,
@@ -29,9 +38,5 @@ export default async function InterceptedItemModal({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const item = await getMenuItemById(id);
-
-  if (!item) notFound();
-
-  return <ItemModal item={item} />;
+  return <ItemModal id={id} />;
 }

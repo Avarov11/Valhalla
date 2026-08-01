@@ -43,10 +43,16 @@ export function ItemDetailContent({
   item,
   topRightSlot,
   onAdded,
+  // Default matches app/item/[id]/page.tsx's own max-w-xl container
+  // (576px) exactly. The intercepted modal (ItemModal.tsx) passes its
+  // own tighter value instead, since its actual cap differs by
+  // breakpoint (full-bleed below md, 576px at md, 512px at lg+).
+  sizes = "(max-width: 640px) 100vw, 36rem",
 }: {
   item: MenuItemRow;
   topRightSlot?: ReactNode;
   onAdded?: () => void;
+  sizes?: string;
 }) {
   const cart = useCartContext();
   const hasSizes = item.item_sizes.length > 0;
@@ -82,11 +88,7 @@ export function ItemDetailContent({
             alt={item.name_en}
             fill
             priority
-            // 36rem (576px), not 32rem: matches app/item/[id]/page.tsx's
-            // actual max-w-xl container exactly, and is a safe (slightly
-            // generous, never blurry) match for the intercepted modal's
-            // narrower lg:max-w-lg (512px) too.
-            sizes="(max-width: 640px) 100vw, 36rem"
+            sizes={sizes}
             className={`object-contain ${isAvailable ? "" : "opacity-50"}`}
           />
         ) : null}
