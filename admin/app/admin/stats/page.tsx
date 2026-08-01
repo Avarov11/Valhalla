@@ -6,7 +6,9 @@ import { Tag } from "@phosphor-icons/react/dist/ssr/Tag";
 import { getAdminMenu } from "@/lib/admin/get-admin-menu";
 import { formatPrice } from "@/lib/menu/format";
 
-export const dynamic = "force-dynamic";
+// See products/page.tsx's comment: same switch from force-dynamic to a
+// short ISR window, same reasoning.
+export const revalidate = 30;
 
 function greeting(hour: number): string {
   if (hour < 12) return "Good morning";
@@ -117,9 +119,16 @@ export default async function AdminStatsPage() {
             {greeting(now.getHours())}, Admin
           </h1>
         </div>
+        {/* Was "Updated just now", accurate back when this page was
+            force-dynamic. Not honest to claim anymore now that it
+            carries a 30s ISR window (see this file's revalidate
+            export) and could genuinely be serving a page rendered up
+            to 30s ago. Any write still invalidates this immediately
+            via revalidatePath, this note is only about the no-write
+            steady state. */}
         <span className="flex items-center gap-1.5 pt-1 text-(length:--text-xs) text-(--text-muted)">
           <ArrowsClockwise size={14} />
-          Updated just now
+          Live within 30s
         </span>
       </div>
 

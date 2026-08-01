@@ -1,7 +1,14 @@
 import { getAdminMenu } from "@/lib/admin/get-admin-menu";
 import { ProductsClient } from "./ProductsClient";
 
-export const dynamic = "force-dynamic";
+// Was force-dynamic (a live Supabase query on every navigation, no
+// caching at all); switched to a short ISR window after a real report
+// that switching tabs felt slow, see get-admin-menu.ts's own comment
+// for the full reasoning. Every mutation already calls revalidatePath
+// on both this route and /admin/stats, so a save/toggle/delete is
+// reflected immediately regardless of this window; 30s only bounds
+// staleness for page loads with no write in between.
+export const revalidate = 30;
 
 export default async function AdminProductsPage() {
   const menu = await getAdminMenu();

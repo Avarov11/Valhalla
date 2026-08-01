@@ -20,7 +20,13 @@ function slugify(input: string): string {
 }
 
 function revalidate() {
+  // Both, not just products: now that both pages carry a short ISR
+  // window (see products/page.tsx, stats/page.tsx) instead of
+  // force-dynamic, Stats' aggregate counts read from the same
+  // underlying data and need the same immediate invalidation on write,
+  // not just Products' own list.
   revalidatePath("/admin/products");
+  revalidatePath("/admin/stats");
 }
 
 /**

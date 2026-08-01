@@ -44,6 +44,9 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              // See AdminNav.tsx's own comment: forces the full prefetch
+              // (data included), not just the shell.
+              prefetch={true}
               className={`flex items-start gap-3 rounded-(--radius-md) px-3 py-2.5 transition duration-(--duration-fast) ${
                 isActive
                   ? "bg-(--accent-subtle-bg) text-(--accent-text)"

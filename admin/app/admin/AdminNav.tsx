@@ -20,6 +20,13 @@ export function AdminNav() {
           <Link
             key={tab.href}
             href={tab.href}
+            // Default "auto" prefetch only warms the shell for a route
+            // that isn't fully static (these carry a revalidate window,
+            // not force-dynamic, but that's not the same as being
+            // static at the segment level), not the actual data-bearing
+            // payload. true forces the full prefetch, same fix and same
+            // reasoning as the customer site's MenuItemCard.tsx Link.
+            prefetch={true}
             className={`border-b-2 px-3 py-2.5 text-(length:--text-sm) font-medium transition duration-(--duration-fast) ${
               isActive
                 ? "border-(--accent-solid) text-(--accent-text)"
