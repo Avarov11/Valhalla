@@ -1,23 +1,28 @@
 import { notFound } from "next/navigation";
-import { getMenu, getMenuItemById } from "@/lib/menu/get-menu";
+import { getMenuItemById } from "@/lib/menu/get-menu";
 import { ItemModal } from "@/components/menu/ItemModal";
 
 export const revalidate = 60;
 
 /**
- * Without this, every card tap from the grid hit this route live: a
- * server render plus a real Supabase round trip on every single click,
- * the same "ƒ Dynamic" problem app/item/[id]/page.tsx already had fixed
- * once (see that file's own comment) but this sibling route never got.
- * This is actually the more important of the two to prebuild, since
- * this is what fires on the normal in-app browsing flow (tapping a
- * card), not just a direct link or refresh.
+ * REVERTED (2026-08-01): this briefly had generateStaticParams, same as
+ * app/item/[id]/page.tsx, to fix every card tap doing a live Supabase
+ * round trip. It genuinely did fix that in a local production build
+ * (next start), but on Vercel specifically it broke interception: any
+ * request carrying a Next-Url header (which is how the client router
+ * resolves "what does this route look like when reached as an
+ * interception from X", sent on both prefetch AND the real
+ * click-triggered navigation) 404'd, verified directly against the
+ * deployed site and confirmed absent in an identical local next-start
+ * build, so this is Vercel's serving layer for static+intercepted
+ * routes specifically, not our code or this Next.js version. A
+ * statically prerendered page is baked for one tree shape; interception
+ * needs the server to compute an alternate shape per request, which a
+ * fully static route can't do once Vercel serves it from its CDN layer
+ * instead of invoking the function. Left dynamic here on purpose. The
+ * standalone page doesn't have this problem (no interception, no
+ * Next-Url dependency) and keeps its own generateStaticParams.
  */
-export async function generateStaticParams() {
-  const menu = await getMenu();
-  return menu.flatMap((category) => category.menu_items.map((item) => ({ id: item.id })));
-}
-
 export default async function InterceptedItemModal({
   params,
 }: {
