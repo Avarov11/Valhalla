@@ -3,27 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CaretDown } from "@phosphor-icons/react";
-import type { Order, OrderStatus } from "@/lib/admin/get-admin-orders";
+import { ORDER_STATUSES, STATUS_COLOR, STATUS_LABELS, type Order, type OrderStatus } from "@/lib/admin/order-status";
 import { formatPrice } from "@/lib/menu/format";
 import { setOrderStatus } from "./actions";
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  new: "New",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
-
-// Text tokens throughout, not the status color itself, matching this
-// project's "text wears text tokens, never the series color" rule
-// (see CLAUDE.md's dataviz-informed Stats page); only the small dot
-// and the select's own background carry the status color.
-const STATUS_DOT: Record<OrderStatus, string> = {
-  new: "var(--admin-stat-blue)",
-  confirmed: "var(--admin-stat-orange)",
-  completed: "var(--admin-status-good)",
-  cancelled: "var(--text-muted)",
-};
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -59,7 +41,7 @@ export function OrderCard({ order }: { order: Order }) {
         <div className="flex items-center gap-2">
           <span
             className="h-2 w-2 shrink-0 rounded-(--radius-pill)"
-            style={{ backgroundColor: STATUS_DOT[order.status] }}
+            style={{ backgroundColor: STATUS_COLOR[order.status] }}
           />
           <span className="text-(length:--text-sm) font-medium text-(--text-primary)">{formatDate(order.created_at)}</span>
         </div>
@@ -70,7 +52,7 @@ export function OrderCard({ order }: { order: Order }) {
           disabled={isPending}
           className="rounded-(--radius-pill) border border-(--border-default) bg-(--bg-page) px-3 py-1.5 text-(length:--text-xs) font-medium text-(--text-primary) disabled:opacity-60"
         >
-          {(Object.keys(STATUS_LABELS) as OrderStatus[]).map((status) => (
+          {ORDER_STATUSES.map((status) => (
             <option key={status} value={status}>
               {STATUS_LABELS[status]}
             </option>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { OrderStatus } from "@/lib/admin/get-admin-orders";
+import type { OrderStatus } from "@/lib/admin/order-status";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 

@@ -1,12 +1,17 @@
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise";
+import { BellRinging } from "@phosphor-icons/react/dist/ssr/BellRinging";
+import { CalendarCheck } from "@phosphor-icons/react/dist/ssr/CalendarCheck";
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { Package } from "@phosphor-icons/react/dist/ssr/Package";
 import { Receipt } from "@phosphor-icons/react/dist/ssr/Receipt";
 import { Star } from "@phosphor-icons/react/dist/ssr/Star";
 import { Tag } from "@phosphor-icons/react/dist/ssr/Tag";
+import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp";
 import { getAdminMenu } from "@/lib/admin/get-admin-menu";
 import { getAdminOrders } from "@/lib/admin/get-admin-orders";
 import { formatPrice } from "@/lib/menu/format";
+import { OrdersByStatusDonut } from "./OrdersByStatusDonut";
+import { RevenueTrendChart } from "./RevenueTrendChart";
 
 // See products/page.tsx's comment: same switch from force-dynamic to a
 // short ISR window, same reasoning.
@@ -92,11 +97,14 @@ export default async function AdminStatsPage() {
   const now = new Date();
 
   // Cancelled orders excluded: never fulfilled, counting them would
-  // overstate what actually came in. New and confirmed both count,
-  // not just completed, since there's no reliable signal yet for when
-  // an order actually gets marked completed versus just left as
-  // confirmed, see admin/app/admin/orders/OrderCard.tsx.
+  // overstate what actually came in.
   const revenue = orders.filter((o) => o.status !== "cancelled").reduce((sum, o) => sum + o.total_price, 0);
+  const ordersToday = orders.filter((o) => new Date(o.created_at).toDateString() === now.toDateString()).length;
+  // "new" is the one status meaning "just arrived, nobody's looked at
+  // it yet" - the closest real equivalent this order model has to a
+  // payment-confirmation queue, without inventing a status this
+  // project's WhatsApp-only checkout doesn't actually have.
+  const needsAction = orders.filter((o) => o.status === "new").length;
 
   const totalItems = items.length;
   const availableCount = items.filter((i) => i.is_available).length;
@@ -141,38 +149,55 @@ export default async function AdminStatsPage() {
         </span>
       </div>
 
-      {/* Real now (2026-08-01): orders started being recorded the same
-          day, see CLAUDE.md, Admin dashboard, Orders, and
-          lib/orders/create-order.ts on the customer site. Computed
-          directly from the orders table, same "real facts only, never
-          invent business data" rule as everywhere else, not a guess and
-          not hidden behind a dash anymore now that there's something
-          real to show. Still styled distinctly (dashed border) rather
-          than folded into the KPI grid below: it's the newest, least-
-          proven number on this page, worth a beat of "this is recent"
-          rather than blending in as if it's been solid for months. */}
-      <div className="flex items-center justify-between gap-4 rounded-(--radius-md) border border-dashed border-(--border-strong) bg-(--bg-surface) p-4">
-        <div>
-          <span className="text-(length:--text-xs) font-medium uppercase tracking-(--tracking-wide) text-(--text-muted)">
-            Revenue
-          </span>
-          <p className="mt-1 text-(length:--text-2xl) font-semibold text-(--text-primary)">{formatPrice(revenue)}</p>
+      {/* Orders overview: revenue, order counts, and the two charts
+          below are all real now (2026-08-01, see CLAUDE.md, Admin
+          dashboard, Orders), no longer the dashed "not tracked yet"
+          placeholder this section used to be. Styled like the rest of
+          the KPI grid instead of visually set apart, now that there's
+          something as real to show as everything else on this page. */}
+      <section className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatTile
+            icon={<TrendUp size={16} weight="bold" />}
+            color="var(--admin-stat-blue)"
+            label="Total revenue"
+            value={formatPrice(revenue)}
+            sublabel="Cancelled orders excluded"
+          />
+          <StatTile
+            icon={<Receipt size={16} weight="bold" />}
+            color="var(--admin-stat-orange)"
+            label="Total orders"
+            value={String(orders.length)}
+          />
+          <StatTile
+            icon={<CalendarCheck size={16} weight="bold" />}
+            color="var(--admin-stat-aqua)"
+            label="Orders today"
+            value={String(ordersToday)}
+          />
+          <StatTile
+            icon={<BellRinging size={16} weight="bold" />}
+            color="var(--admin-stat-violet)"
+            label="Needs action"
+            value={String(needsAction)}
+            sublabel={needsAction > 0 ? "New, not yet confirmed" : undefined}
+          />
         </div>
-        <p className="max-w-md text-right text-(length:--text-xs) text-(--text-secondary)">
-          Sum of {orders.filter((o) => o.status !== "cancelled").length} order
-          {orders.filter((o) => o.status !== "cancelled").length === 1 ? "" : "s"}, cancelled orders excluded.
-          Recorded the moment &ldquo;Order on WhatsApp&rdquo; is tapped, see the Orders tab.
-        </p>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <StatTile
-          icon={<Receipt size={16} weight="bold" />}
-          color="var(--admin-stat-blue)"
-          label="Orders"
-          value={String(orders.length)}
-          sublabel={orders.length > 0 ? `${orders.filter((o) => o.status === "new").length} new` : undefined}
-        />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-4">
+            <h2 className="mb-3 text-(length:--text-sm) font-semibold text-(--text-primary)">Revenue, last 7 days</h2>
+            <RevenueTrendChart orders={orders} now={now} />
+          </div>
+          <div className="rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-4">
+            <h2 className="mb-3 text-(length:--text-sm) font-semibold text-(--text-primary)">Orders by status</h2>
+            <OrdersByStatusDonut orders={orders} />
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile
           icon={<Package size={16} weight="bold" />}
           color="var(--admin-stat-blue)"

@@ -1,34 +1,18 @@
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Order } from "@/lib/admin/order-status";
 
-export type OrderStatus = "new" | "confirmed" | "completed" | "cancelled";
-
-export type OrderItem = {
-  item_id: string;
-  name: string;
-  size_label: string | null;
-  addons: { name: string; price_delta: number }[];
-  quantity: number;
-  unit_price: number;
-  line_total: number;
-};
-
-export type Order = {
-  id: string;
-  created_at: string;
-  status: OrderStatus;
-  items: OrderItem[];
-  total_price: number;
-  whatsapp_message: string;
-  customer_name: string | null;
-  customer_phone: string | null;
-};
+export type { Order } from "@/lib/admin/order-status";
 
 /**
  * Same service_role client and cache() wrap as get-admin-menu.ts, same
  * reasoning: bypasses RLS (orders has zero anon policies at all, see
  * the migration's own comment), shared between the Orders list and the
- * Stats page's revenue card so both read the same live data.
+ * Stats page's revenue/status charts so both read the same live data.
+ *
+ * Server-only file, imports the service-role client: never import this
+ * specific export from a "use client" file, see order-status.ts's own
+ * comment for what happened the one time that got mixed up.
  */
 export const getAdminOrders = cache(async (): Promise<Order[]> => {
   const supabase = createAdminClient();
