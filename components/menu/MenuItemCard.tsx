@@ -169,10 +169,10 @@ export const MenuItemCard = memo(function MenuItemCard({ item }: MenuItemCardPro
           disabled={!isAvailable}
           aria-label={
             !isAvailable
-              ? `${item.name_en} is sold out`
+              ? `Sold out, ${item.name_en}`
               : hasSizes
-                ? `Choose a size for ${item.name_en}`
-                : `Add ${item.name_en} to cart`
+                ? `Add to Cart, choose a size for ${item.name_en}`
+                : `Add to Cart, ${item.name_en}`
           }
           className="pointer-events-auto relative z-20 mt-1 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-(--radius-pill) bg-(--accent-solid) text-(length:--text-sm) font-semibold text-(--text-on-accent) transition duration-(--duration-fast) hover:bg-(--accent-solid-hover) active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-(--bg-unavailable) disabled:text-(--text-muted)"
         >
