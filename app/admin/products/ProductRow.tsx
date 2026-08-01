@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import type { MenuItemRow } from "@/lib/menu/types";
 import { formatPrice } from "@/lib/menu/format";
 import { updateItemFields, setAvailability, setPopular, deleteItem, replacePhoto } from "./actions";
@@ -12,6 +13,7 @@ import { updateItemFields, setAvailability, setPopular, deleteItem, replacePhoto
  * the list in view instead of stacking dialogs on a dense admin list.
  */
 export function ProductRow({ item }: { item: MenuItemRow }) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -55,20 +57,40 @@ export function ProductRow({ item }: { item: MenuItemRow }) {
         return;
       }
       setIsEditing(false);
+      router.refresh();
     });
   }
 
+  // Every handler below calls router.refresh() on success. revalidatePath
+  // inside the server action invalidates the server-side cache, but a
+  // server action invoked directly from a button's onClick (not a native
+  // <form action={...}> submit) doesn't reliably push fresh props back
+  // into an already-mounted client component on its own. Without this,
+  // `item` here stays frozen at whatever it was on page load, so a
+  // second toggle computes !item.is_available against the STALE value
+  // again instead of the value the first toggle actually set, which is
+  // exactly the "toggled back to available, stayed unavailable" bug this
+  // was caught from: both toggles were computing the same result from
+  // the same stale starting point.
   function handleToggleAvailable() {
     startTransition(async () => {
       const result = await setAvailability(item.id, !item.is_available);
-      if (!result.ok) setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
     });
   }
 
   function handleTogglePopular() {
     startTransition(async () => {
       const result = await setPopular(item.id, !item.is_popular);
-      if (!result.ok) setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
     });
   }
 
@@ -78,7 +100,9 @@ export function ProductRow({ item }: { item: MenuItemRow }) {
       if (!result.ok) {
         setError(result.error);
         setIsConfirmingDelete(false);
+        return;
       }
+      router.refresh();
     });
   }
 
@@ -90,8 +114,12 @@ export function ProductRow({ item }: { item: MenuItemRow }) {
     formData.set("photo", file);
     startTransition(async () => {
       const result = await replacePhoto(item.id, formData);
-      if (!result.ok) setError(result.error);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
     });
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createItem } from "./actions";
 
 /**
@@ -8,6 +9,7 @@ import { createItem } from "./actions";
  * sized items aren't created here this session.
  */
 export function NewItemForm({ categoryId }: { categoryId: string }) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +46,7 @@ export function NewItemForm({ categoryId }: { categoryId: string }) {
       }
       reset();
       setIsOpen(false);
+      router.refresh();
     });
   }
 
