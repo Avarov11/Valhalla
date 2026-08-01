@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, m } from "motion/react";
-import { Minus, Plus, WarningCircle, X } from "@phosphor-icons/react";
+import { ArrowLeft, Minus, Plus, WarningCircle, X } from "@phosphor-icons/react";
 import type { ResolvedCartLine, RemovedNotice } from "@/lib/cart/types";
 import { formatPrice } from "@/lib/menu/format";
+import { buildWhatsAppOrder } from "@/lib/cart/whatsapp";
 import { createOrder } from "@/lib/orders/create-order";
 
 type CartDrawerProps = {
@@ -16,10 +17,11 @@ type CartDrawerProps = {
   onDismissNotices: () => void;
   onUpdateQuantity: (itemId: string, sizeLabel: string | null, addonOptionIds: string[], quantity: number) => void;
   onRemove: (itemId: string, sizeLabel: string | null, addonOptionIds: string[]) => void;
+  onOrderComplete: () => void;
   grandTotal: number;
-  whatsappUrl: string;
-  whatsappTruncated: boolean;
 };
+
+type Step = "cart" | "checkout";
 
 function removalReason(notice: RemovedNotice): string {
   switch (notice.reason) {
@@ -68,6 +70,24 @@ function useIsDesktopCart() {
   return isDesktop;
 }
 
+function isValidPhone(phone: string): boolean {
+  const digits = phone.replace(/[^0-9]/g, "");
+  return digits.length >= 8;
+}
+
+/**
+ * Select items -> cart -> checkout -> WhatsApp, not straight from cart
+ * to WhatsApp (2026-08-01, explicit request). The cart step is
+ * unchanged (quantities, removal, running total); "Checkout" now leads
+ * to a second step inside the same drawer, a read-only order summary
+ * plus a name and phone number the customer fills in, rather than a
+ * separate route: this is still a transient, quick interaction, not a
+ * page navigation, matching this project's own established pattern for
+ * the cart panel and, at lg+, the item detail overlay. Both steps
+ * share one drawer/sheet shell so the entrance/exit motion and
+ * responsive shape (bottom sheet vs corner panel) only needs to be
+ * defined once.
+ */
 export function CartDrawer({
   open,
   onClose,
@@ -76,29 +96,29 @@ export function CartDrawer({
   onDismissNotices,
   onUpdateQuantity,
   onRemove,
+  onOrderComplete,
   grandTotal,
-  whatsappUrl,
-  whatsappTruncated,
 }: CartDrawerProps) {
   const isDesktop = useIsDesktopCart();
+  const [step, setStep] = useState<Step>("cart");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
 
-  // Fire-and-forget, deliberately not awaited: the WhatsApp link (a
-  // target="_blank" anchor) opens in a new tab regardless of what this
-  // does, so there's nothing to block it on and no loading state to
-  // show. This is the owner's bookkeeping copy of the order, not the
-  // order itself, see lib/orders/create-order.ts's own comment for why
-  // a failure here is silently swallowed rather than shown to the
-  // customer, who has already sent (or is sending) the real order over
-  // WhatsApp regardless.
-  function recordOrder() {
-    const cartLines = lines.map((line) => ({
-      itemId: line.itemId,
-      sizeLabel: line.sizeLabel,
-      addonOptionIds: line.addonOptionIds,
-      quantity: line.quantity,
-    }));
-    void createOrder(cartLines).catch(() => {});
-  }
+  // Always land back on the cart step, not mid-checkout, next time the
+  // drawer opens: reopening into an old checkout form (maybe from a
+  // stray tap days later) would be more confusing than a fresh start.
+  useEffect(() => {
+    if (!open) {
+      const t = setTimeout(() => setStep("cart"), 300);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  const whatsapp = useMemo(
+    () => buildWhatsAppOrder(lines, customerName, customerPhone),
+    [lines, customerName, customerPhone],
+  );
+  const canSubmit = customerName.trim().length > 0 && isValidPhone(customerPhone);
 
   useEffect(() => {
     if (!open) return;
@@ -108,6 +128,28 @@ export function CartDrawer({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
+
+  // Fire-and-forget, deliberately not awaited: the WhatsApp link (a
+  // target="_blank" anchor) opens in a new tab regardless of what this
+  // does, so there's nothing to block it on and no loading state to
+  // show. This is the owner's bookkeeping copy of the order, not the
+  // order itself, see lib/orders/create-order.ts's own comment for why
+  // a failure here is silently swallowed rather than shown to the
+  // customer, who has already sent (or is sending) the real order over
+  // WhatsApp regardless.
+  function handleSubmit() {
+    const cartLines = lines.map((line) => ({
+      itemId: line.itemId,
+      sizeLabel: line.sizeLabel,
+      addonOptionIds: line.addonOptionIds,
+      quantity: line.quantity,
+    }));
+    void createOrder(cartLines, customerName, customerPhone).catch(() => {});
+    onOrderComplete();
+    setCustomerName("");
+    setCustomerPhone("");
+    onClose();
+  }
 
   return (
     <AnimatePresence>
@@ -126,7 +168,7 @@ export function CartDrawer({
             key="cart-panel"
             role="dialog"
             aria-modal="true"
-            aria-label="Cart"
+            aria-label={step === "cart" ? "Cart" : "Checkout"}
             className="fixed inset-x-0 bottom-0 z-(--z-cart-sheet) flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-(--radius-lg) bg-(--bg-page) shadow-(--shadow-lg) md:max-w-xl md:mx-auto lg:inset-x-auto lg:mx-0 lg:left-auto lg:right-6 lg:top-6 lg:bottom-auto lg:max-h-[calc(100dvh-3rem)] lg:w-full lg:max-w-md lg:rounded-(--radius-lg)"
             initial={isDesktop ? { x: "100%" } : { y: "100%" }}
             animate={isDesktop ? { x: 0 } : { y: 0 }}
@@ -136,9 +178,21 @@ export function CartDrawer({
             <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-(--radius-pill) bg-(--border-strong) lg:hidden" />
 
             <div className="flex items-center justify-between border-b border-(--border-default) px-4 py-3">
-              <h2 className="font-(family-name:--font-display) text-(length:--text-lg) text-(--text-primary)">
-                Your order
-              </h2>
+              <div className="flex items-center gap-1">
+                {step === "checkout" ? (
+                  <button
+                    type="button"
+                    onClick={() => setStep("cart")}
+                    aria-label="Back to cart"
+                    className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-90"
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
+                ) : null}
+                <h2 className="font-(family-name:--font-display) text-(length:--text-lg) text-(--text-primary)">
+                  {step === "cart" ? "Your order" : "Checkout"}
+                </h2>
+              </div>
               <button
                 type="button"
                 onClick={onClose}
@@ -149,150 +203,227 @@ export function CartDrawer({
               </button>
             </div>
 
-            {removedNotices.length > 0 ? (
-              <div className="flex items-center gap-2 border-b border-(--border-default) bg-(--bg-unavailable) px-4 py-3 text-(length:--text-sm) text-(--text-secondary)">
-                <WarningCircle size={18} className="shrink-0" />
-                <div className="flex-1">
-                  {removedNotices.map((notice, i) => (
-                    <p key={i}>
-                      {notice.name} was removed, {removalReason(notice)}.
-                    </p>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={onDismissNotices}
-                  aria-label="Dismiss notice"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center text-(--text-muted)"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : null}
-
-            <div className="flex-1 overflow-y-auto px-4 py-3">
-              {lines.length === 0 ? (
-                <div className="flex min-h-[240px] flex-col items-center justify-center gap-2 text-center text-(--text-secondary)">
-                  <p className="text-(length:--text-sm)">Your cart is empty.</p>
-                  <p className="text-(length:--text-xs) text-(--text-muted)">
-                    Add something from the menu to get started.
-                  </p>
-                </div>
-              ) : (
-                <ul className="flex flex-col gap-4">
-                  {lines.map((line) => (
-                    <li
-                      key={`${line.itemId}-${line.sizeLabel ?? "flat"}-${line.addonOptionIds.join(",")}`}
-                      className="flex gap-3"
+            {step === "cart" ? (
+              <>
+                {removedNotices.length > 0 ? (
+                  <div className="flex items-center gap-2 border-b border-(--border-default) bg-(--bg-unavailable) px-4 py-3 text-(length:--text-sm) text-(--text-secondary)">
+                    <WarningCircle size={18} className="shrink-0" />
+                    <div className="flex-1">
+                      {removedNotices.map((notice, i) => (
+                        <p key={i}>
+                          {notice.name} was removed, {removalReason(notice)}.
+                        </p>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onDismissNotices}
+                      aria-label="Dismiss notice"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center text-(--text-muted)"
                     >
-                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-(--radius-md) bg-(--bg-unavailable)">
-                        {line.imageUrl ? (
-                          <Image
-                            src={line.imageUrl}
-                            alt={line.name}
-                            fill
-                            sizes="4rem"
-                            className="object-cover"
-                          />
-                        ) : null}
-                      </div>
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : null}
 
-                      <div className="flex-1">
-                        <p className="text-(length:--text-sm) font-medium text-(--text-primary)">
-                          {line.name}
+                <div className="flex-1 overflow-y-auto px-4 py-3">
+                  {lines.length === 0 ? (
+                    <div className="flex min-h-[240px] flex-col items-center justify-center gap-2 text-center text-(--text-secondary)">
+                      <p className="text-(length:--text-sm)">Your cart is empty.</p>
+                      <p className="text-(length:--text-xs) text-(--text-muted)">
+                        Add something from the menu to get started.
+                      </p>
+                    </div>
+                  ) : (
+                    <ul className="flex flex-col gap-4">
+                      {lines.map((line) => (
+                        <li
+                          key={`${line.itemId}-${line.sizeLabel ?? "flat"}-${line.addonOptionIds.join(",")}`}
+                          className="flex gap-3"
+                        >
+                          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-(--radius-md) bg-(--bg-unavailable)">
+                            {line.imageUrl ? (
+                              <Image
+                                src={line.imageUrl}
+                                alt={line.name}
+                                fill
+                                sizes="4rem"
+                                className="object-cover"
+                              />
+                            ) : null}
+                          </div>
+
+                          <div className="flex-1">
+                            <p className="text-(length:--text-sm) font-medium text-(--text-primary)">
+                              {line.name}
+                              {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
+                            </p>
+                            {line.addons.length > 0 ? (
+                              <p className="text-(length:--text-xs) text-(--text-secondary)">
+                                + {line.addons.map((a) => a.name).join(", ")}
+                              </p>
+                            ) : null}
+                            <p className="text-(length:--text-xs) text-(--text-muted)">
+                              {formatPrice(line.unitPrice)} each
+                            </p>
+                            <div className="mt-2 flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onUpdateQuantity(line.itemId, line.sizeLabel, line.addonOptionIds, line.quantity - 1)
+                                }
+                                aria-label={`Decrease quantity of ${line.name}`}
+                                className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-[0.92]"
+                              >
+                                <Minus size={12} />
+                              </button>
+                              <span className="w-5 text-center text-(length:--text-sm) text-(--text-primary)">
+                                {line.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onUpdateQuantity(line.itemId, line.sizeLabel, line.addonOptionIds, line.quantity + 1)
+                                }
+                                aria-label={`Increase quantity of ${line.name}`}
+                                className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-[0.92]"
+                              >
+                                <Plus size={12} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end justify-between">
+                            <span className="text-(length:--text-sm) font-semibold text-(--text-primary)">
+                              {formatPrice(line.lineTotal)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onRemove(line.itemId, line.sizeLabel, line.addonOptionIds)}
+                              aria-label={`Remove ${line.name} from cart`}
+                              className="flex min-h-11 items-center text-(length:--text-xs) text-(--text-muted) underline active:opacity-60"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="border-t border-(--border-default) px-4 py-3">
+                  <div className="flex items-center justify-between text-(length:--text-md) font-semibold text-(--text-primary)">
+                    <span>Total</span>
+                    <span>{formatPrice(grandTotal)}</span>
+                  </div>
+                  <p className="mt-1 text-(length:--text-xs) text-(--text-muted)">Prices include taxes</p>
+                  <p className="font-(family-name:--font-arabic) text-(length:--text-xs) text-(--text-muted)">
+                    السعر شامل القيمة المضافة
+                  </p>
+
+                  <button
+                    type="button"
+                    disabled={lines.length === 0}
+                    onClick={() => setStep("checkout")}
+                    className={`mt-3 flex w-full items-center justify-center rounded-(--radius-pill) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) ${
+                      lines.length > 0
+                        ? "bg-(--accent-solid) hover:bg-(--accent-solid-hover) active:scale-[0.98]"
+                        : "cursor-not-allowed bg-(--bg-unavailable) text-(--text-muted)"
+                    }`}
+                  >
+                    Checkout
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex-1 overflow-y-auto px-4 py-3">
+                  <h3 className="mb-2 text-(length:--text-sm) font-semibold text-(--text-primary)">Order summary</h3>
+                  <ul className="flex flex-col gap-2 rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) p-3">
+                    {lines.map((line) => (
+                      <li
+                        key={`${line.itemId}-${line.sizeLabel ?? "flat"}-${line.addonOptionIds.join(",")}`}
+                        className="flex items-baseline justify-between gap-3 text-(length:--text-sm)"
+                      >
+                        <span className="text-(--text-secondary)">
+                          {line.quantity}x {line.name}
                           {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
-                        </p>
-                        {line.addons.length > 0 ? (
-                          <p className="text-(length:--text-xs) text-(--text-secondary)">
-                            + {line.addons.map((a) => a.name).join(", ")}
-                          </p>
-                        ) : null}
-                        <p className="text-(length:--text-xs) text-(--text-muted)">
-                          {formatPrice(line.unitPrice)} each
-                        </p>
-                        <div className="mt-2 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onUpdateQuantity(line.itemId, line.sizeLabel, line.addonOptionIds, line.quantity - 1)
-                            }
-                            aria-label={`Decrease quantity of ${line.name}`}
-                            className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-[0.92]"
-                          >
-                            <Minus size={12} />
-                          </button>
-                          <span className="w-5 text-center text-(length:--text-sm) text-(--text-primary)">
-                            {line.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onUpdateQuantity(line.itemId, line.sizeLabel, line.addonOptionIds, line.quantity + 1)
-                            }
-                            aria-label={`Increase quantity of ${line.name}`}
-                            className="flex h-11 w-11 items-center justify-center rounded-(--radius-pill) border border-(--border-default) text-(--text-secondary) transition duration-(--duration-fast) hover:bg-(--bg-surface-hover) active:scale-[0.92]"
-                          >
-                            <Plus size={12} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end justify-between">
-                        <span className="text-(length:--text-sm) font-semibold text-(--text-primary)">
+                          {line.addons.length > 0 ? (
+                            <span className="text-(--text-muted)"> + {line.addons.map((a) => a.name).join(", ")}</span>
+                          ) : null}
+                        </span>
+                        <span className="shrink-0 font-medium text-(--text-primary)">
                           {formatPrice(line.lineTotal)}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => onRemove(line.itemId, line.sizeLabel, line.addonOptionIds)}
-                          aria-label={`Remove ${line.name} from cart`}
-                          className="flex min-h-11 items-center text-(length:--text-xs) text-(--text-muted) underline active:opacity-60"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-2 flex items-center justify-between border-t border-(--border-default) pt-2 text-(length:--text-md) font-semibold text-(--text-primary)">
+                    <span>Total</span>
+                    <span>{formatPrice(grandTotal)}</span>
+                  </div>
 
-            <div className="border-t border-(--border-default) px-4 py-3">
-              <div className="flex items-center justify-between text-(length:--text-md) font-semibold text-(--text-primary)">
-                <span>Total</span>
-                <span>{formatPrice(grandTotal)}</span>
-              </div>
-              <p className="mt-1 text-(length:--text-xs) text-(--text-muted)">Prices include taxes</p>
-              <p className="font-(family-name:--font-arabic) text-(length:--text-xs) text-(--text-muted)">
-                السعر شامل القيمة المضافة
-              </p>
+                  <div className="mt-5 flex flex-col gap-3">
+                    <label className="flex flex-col gap-1 text-(length:--text-sm) text-(--text-secondary)">
+                      Name
+                      <input
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Your name"
+                        autoComplete="name"
+                        className="min-h-11 w-full rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) px-3 text-(length:--text-sm) text-(--text-primary) placeholder:text-(--text-muted) focus:border-(--accent-solid)"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-(length:--text-sm) text-(--text-secondary)">
+                      Phone number
+                      <input
+                        type="tel"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="01xxxxxxxxx"
+                        autoComplete="tel"
+                        className="min-h-11 w-full rounded-(--radius-md) border border-(--border-default) bg-(--bg-surface) px-3 text-(length:--text-sm) text-(--text-primary) placeholder:text-(--text-muted) focus:border-(--accent-solid)"
+                      />
+                    </label>
+                  </div>
+                </div>
 
-              {whatsappTruncated ? (
-                <p className="mt-2 text-(length:--text-xs) text-(--text-muted)">
-                  The order message was shortened for WhatsApp. The total above already includes every
-                  item.
-                </p>
-              ) : null}
+                <div className="border-t border-(--border-default) px-4 py-3">
+                  {whatsapp.truncated ? (
+                    <p className="mb-2 text-(length:--text-xs) text-(--text-muted)">
+                      The order message was shortened for WhatsApp. The total above already includes every item.
+                    </p>
+                  ) : null}
 
-              <a
-                href={lines.length > 0 ? whatsappUrl : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-disabled={lines.length === 0}
-                onClick={(e) => {
-                  if (lines.length === 0) {
-                    e.preventDefault();
-                    return;
-                  }
-                  recordOrder();
-                }}
-                className={`mt-3 flex w-full items-center justify-center rounded-(--radius-pill) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) ${
-                  lines.length > 0
-                    ? "bg-(--accent-solid) hover:bg-(--accent-solid-hover) active:scale-[0.98]"
-                    : "cursor-not-allowed bg-(--bg-unavailable) text-(--text-muted)"
-                }`}
-              >
-                Order on WhatsApp
-              </a>
-            </div>
+                  <a
+                    href={canSubmit ? whatsapp.url : undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-disabled={!canSubmit}
+                    onClick={(e) => {
+                      if (!canSubmit) {
+                        e.preventDefault();
+                        return;
+                      }
+                      handleSubmit();
+                    }}
+                    className={`flex w-full items-center justify-center rounded-(--radius-pill) px-4 py-3 text-(length:--text-sm) font-medium text-(--text-on-accent) transition duration-(--duration-fast) ${
+                      canSubmit
+                        ? "bg-(--accent-solid) hover:bg-(--accent-solid-hover) active:scale-[0.98]"
+                        : "cursor-not-allowed bg-(--bg-unavailable) text-(--text-muted)"
+                    }`}
+                  >
+                    Order on WhatsApp
+                  </a>
+                  {!canSubmit ? (
+                    <p className="mt-2 text-center text-(length:--text-xs) text-(--text-muted)">
+                      Enter your name and phone number to continue.
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            )}
           </m.div>
         </>
       ) : null}

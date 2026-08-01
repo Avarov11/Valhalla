@@ -9,9 +9,10 @@ const WHATSAPP_BASE = `https://wa.me/${WHATSAPP_NUMBER}?text=`;
  * WebViews and older mobile browsers in practice. 2000 characters for
  * the full URL (prefix plus encoded text) is a conservative safety
  * margin, chosen deliberately rather than discovered the hard way: the
- * fixed header, grand total, and bilingual tax note together run under
- * 250 characters, which leaves comfortable room for a real order before
- * this ever engages.
+ * fixed header, name/phone lines, grand total, and bilingual tax note
+ * together run under 350 characters for a typical name and phone
+ * number, which leaves comfortable room for a real order before this
+ * ever engages.
  *
  * An order whose itemized list would exceed the cap does not fail or
  * get cut off mid-line. It keeps as many full item lines as fit (in cart
@@ -32,7 +33,13 @@ function formatLine(line: ResolvedCartLine): string {
   return `${line.quantity}x ${line.name}${sizePart}${addonsPart} - ${formatMoney(line.lineTotal)}`;
 }
 
-function assembleMessage(itemLines: string[], omittedCount: number, grandTotal: number): string {
+function assembleMessage(
+  itemLines: string[],
+  omittedCount: number,
+  grandTotal: number,
+  customerName: string,
+  customerPhone: string,
+): string {
   const body = [...itemLines];
   if (omittedCount > 0) {
     body.push(`+ ${omittedCount} more item${omittedCount === 1 ? "" : "s"}, included in the total`);
@@ -40,6 +47,9 @@ function assembleMessage(itemLines: string[], omittedCount: number, grandTotal: 
 
   return [
     "New order from the Valhalla website:",
+    "",
+    `Name: ${customerName}`,
+    `Phone: ${customerPhone}`,
     "",
     ...body,
     "",
@@ -53,7 +63,11 @@ function urlFor(message: string): string {
   return `${WHATSAPP_BASE}${encodeURIComponent(message)}`;
 }
 
-export function buildWhatsAppOrder(lines: ResolvedCartLine[]): {
+export function buildWhatsAppOrder(
+  lines: ResolvedCartLine[],
+  customerName: string,
+  customerPhone: string,
+): {
   url: string;
   message: string;
   truncated: boolean;
@@ -61,7 +75,7 @@ export function buildWhatsAppOrder(lines: ResolvedCartLine[]): {
   const grandTotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
   const fullItemLines = lines.map(formatLine);
 
-  const fullMessage = assembleMessage(fullItemLines, 0, grandTotal);
+  const fullMessage = assembleMessage(fullItemLines, 0, grandTotal, customerName, customerPhone);
   const fullUrl = urlFor(fullMessage);
 
   if (fullUrl.length <= MAX_URL_LENGTH) {
@@ -75,6 +89,8 @@ export function buildWhatsAppOrder(lines: ResolvedCartLine[]): {
       [...includedLines, fullItemLines[i]],
       omittedIfIncluded,
       grandTotal,
+      customerName,
+      customerPhone,
     );
     if (urlFor(candidateMessage).length > MAX_URL_LENGTH) {
       break;
@@ -83,7 +99,7 @@ export function buildWhatsAppOrder(lines: ResolvedCartLine[]): {
   }
 
   const omitted = lines.length - includedLines.length;
-  const message = assembleMessage(includedLines, omitted, grandTotal);
+  const message = assembleMessage(includedLines, omitted, grandTotal, customerName, customerPhone);
 
   return { url: urlFor(message), message, truncated: omitted > 0 };
 }

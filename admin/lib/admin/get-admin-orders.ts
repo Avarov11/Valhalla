@@ -20,6 +20,8 @@ export type Order = {
   items: OrderItem[];
   total_price: number;
   whatsapp_message: string;
+  customer_name: string | null;
+  customer_phone: string | null;
 };
 
 /**

@@ -10,10 +10,10 @@ type CreateOrderResult = { ok: true } | { ok: false; error: string };
 
 /**
  * Records an order alongside the WhatsApp message the customer is
- * about to send (see components/cart/CartDrawer.tsx's onClick), it
- * does not gate or replace that flow: if this fails, the WhatsApp link
- * still opens, the customer's actual order still goes through, this is
- * only the owner's bookkeeping copy.
+ * about to send (see components/cart/CartDrawer.tsx's checkout step),
+ * it does not gate or replace that flow: if this fails, the WhatsApp
+ * link still opens, the customer's actual order still goes through,
+ * this is only the owner's bookkeeping copy.
  *
  * Takes raw CartLine[] (item/size/addon ids and quantities only), the
  * same shape localStorage holds, never the client's already-resolved
@@ -26,10 +26,30 @@ type CreateOrderResult = { ok: true } | { ok: false; error: string };
  * "never trust a stored price" discipline the cart itself already
  * applies to localStorage, applied a second time here so a manipulated
  * client request can't write a fabricated cheap order into the record.
+ *
+ * customer_name/customer_phone are nullable at the DB level (a real
+ * order was placed before checkout collected them at all, see
+ * supabase/migrations/20260801170000_orders_customer_contact.sql) but
+ * required here: the checkout form already requires non-empty values
+ * before its button enables, this re-validates server-side too rather
+ * than trusting that client-side check alone.
  */
-export async function createOrder(lines: CartLine[]): Promise<CreateOrderResult> {
+export async function createOrder(
+  lines: CartLine[],
+  customerName: string,
+  customerPhone: string,
+): Promise<CreateOrderResult> {
+  const name = customerName.trim();
+  const phone = customerPhone.trim();
+
   if (lines.length === 0) {
     return { ok: false, error: "Cart is empty." };
+  }
+  if (!name) {
+    return { ok: false, error: "Name is required." };
+  }
+  if (!phone) {
+    return { ok: false, error: "Phone number is required." };
   }
 
   const menu = await getMenu();
@@ -39,7 +59,7 @@ export async function createOrder(lines: CartLine[]): Promise<CreateOrderResult>
     return { ok: false, error: "None of these items could be resolved against the current menu." };
   }
 
-  const { message } = buildWhatsAppOrder(resolved);
+  const { message } = buildWhatsAppOrder(resolved, name, phone);
   const totalPrice = resolved.reduce((sum, line) => sum + line.lineTotal, 0);
 
   const items = resolved.map((line) => ({
@@ -57,6 +77,8 @@ export async function createOrder(lines: CartLine[]): Promise<CreateOrderResult>
     items,
     total_price: totalPrice,
     whatsapp_message: message,
+    customer_name: name,
+    customer_phone: phone,
   });
 
   if (error) {

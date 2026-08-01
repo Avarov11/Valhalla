@@ -5,7 +5,6 @@ import type { Menu } from "@/lib/menu/types";
 import type { CartLine, RemovedNotice } from "@/lib/cart/types";
 import { readCartLines, writeCartLines } from "@/lib/cart/storage";
 import { resolveCartLines } from "@/lib/cart/resolve";
-import { buildWhatsAppOrder } from "@/lib/cart/whatsapp";
 
 /**
  * A cart line's real identity is item + size + addon selection, not
@@ -105,7 +104,6 @@ export function useCart(menu: Menu) {
 
   const grandTotal = useMemo(() => resolved.reduce((sum, line) => sum + line.lineTotal, 0), [resolved]);
   const itemCount = useMemo(() => resolved.reduce((sum, line) => sum + line.quantity, 0), [resolved]);
-  const whatsapp = useMemo(() => buildWhatsAppOrder(resolved), [resolved]);
 
   return {
     hydrated,
@@ -118,8 +116,5 @@ export function useCart(menu: Menu) {
     clearCart,
     grandTotal,
     itemCount,
-    whatsappUrl: whatsapp.url,
-    whatsappMessage: whatsapp.message,
-    whatsappTruncated: whatsapp.truncated,
   };
 }

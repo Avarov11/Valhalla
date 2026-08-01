@@ -80,6 +80,17 @@ export function OrderCard({ order }: { order: Order }) {
 
       {error ? <p className="text-(length:--text-xs) text-(--accent-text)">{error}</p> : null}
 
+      {order.customer_name || order.customer_phone ? (
+        <p className="text-(length:--text-sm) text-(--text-secondary)">
+          <span className="font-medium text-(--text-primary)">{order.customer_name ?? "No name given"}</span>
+          {order.customer_phone ? ` · ${order.customer_phone}` : ""}
+        </p>
+      ) : (
+        <p className="text-(length:--text-xs) text-(--text-muted)">
+          No name or phone (placed before checkout collected these).
+        </p>
+      )}
+
       <ul className="flex flex-col gap-1.5 border-y border-(--border-default) py-3">
         {order.items.map((item, i) => (
           <li key={i} className="flex items-baseline justify-between gap-3 text-(length:--text-sm)">

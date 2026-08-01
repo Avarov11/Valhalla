@@ -57,9 +57,8 @@ export function PageShell({ menu, children }: { menu: Menu; children: ReactNode 
         onDismissNotices={cart.dismissRemovedNotices}
         onUpdateQuantity={cart.updateQuantity}
         onRemove={cart.removeItem}
+        onOrderComplete={cart.clearCart}
         grandTotal={cart.grandTotal}
-        whatsappUrl={cart.whatsappUrl}
-        whatsappTruncated={cart.whatsappTruncated}
       />
     </div>
   );
