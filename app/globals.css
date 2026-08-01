@@ -215,20 +215,6 @@
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
   --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
   --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
-
-  /* Admin dashboard only (app/admin/stats), not used anywhere on the
-     customer-facing site, which stays strictly one-accent per the
-     Design rule above. Values are the dataviz skill's own validated
-     categorical/status palette (see references/palette.md), not
-     invented: 4 KPI-tile accents (blue/orange/aqua/violet) plus one
-     status "good" green for the availability meter, deliberately a
-     different green from any categorical slot so the two never look
-     like the same signal. */
-  --admin-stat-blue: #2a78d6;
-  --admin-stat-orange: #eb6834;
-  --admin-stat-aqua: #1baf7a;
-  --admin-stat-violet: #4a3aa7;
-  --admin-status-good: #0ca30c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -265,13 +251,6 @@
     --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
     --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
     --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
-
-    /* Dark steps of the same dataviz-skill palette, see the :root block. */
-    --admin-stat-blue: #3987e5;
-    --admin-stat-orange: #d95926;
-    --admin-stat-aqua: #199e70;
-    --admin-stat-violet: #9085e9;
-    --admin-status-good: #0ca30c;
   }
 }
 
@@ -312,12 +291,6 @@
   --shadow-sm: 0 1px 2px rgba(36, 24, 16, 0.08);
   --shadow-md: 0 6px 20px rgba(36, 24, 16, 0.14);
   --shadow-lg: 0 16px 48px rgba(36, 24, 16, 0.2);
-
-  --admin-stat-blue: #2a78d6;
-  --admin-stat-orange: #eb6834;
-  --admin-stat-aqua: #1baf7a;
-  --admin-stat-violet: #4a3aa7;
-  --admin-status-good: #0ca30c;
 }
 
 [data-theme="dark"] {
@@ -347,12 +320,6 @@
   --shadow-sm: 0 1px 2px rgba(20, 8, 4, 0.45);
   --shadow-md: 0 8px 28px rgba(20, 8, 4, 0.55);
   --shadow-lg: 0 20px 56px rgba(15, 6, 3, 0.65);
-
-  --admin-stat-blue: #3987e5;
-  --admin-stat-orange: #d95926;
-  --admin-stat-aqua: #199e70;
-  --admin-stat-violet: #9085e9;
-  --admin-status-good: #0ca30c;
 }
 
 @media (prefers-reduced-motion: reduce) {
